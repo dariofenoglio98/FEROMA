@@ -113,16 +113,16 @@ class Server:
             log(INFO, "")
             log(INFO, "[ROUND %s]", current_round)
             
-            # -- Additional distributed evaluation -- Descriptor extraction
-            # res_fed = self.evaluate_round(server_round=current_round, timeout=timeout, descriptor_extraction=True)
+            # -- Descriptor extraction and then aggregation based on the extracted descriptors --
+            print("\033[91m" + f"Descriptor extraction - evaluation" + "\033[0m")
             res_fit = self.fit_round(
                 server_round=current_round,
                 timeout=timeout,
                 descriptor_extraction=True,
             )
 
-
             # -- Train model and replace previous global model
+            print("\033[91m" + f"Training" + "\033[0m")
             res_fit = self.fit_round(
                 server_round=current_round,
                 timeout=timeout,
@@ -134,7 +134,6 @@ class Server:
                 history.add_metrics_distributed_fit(
                     server_round=current_round, metrics=fit_metrics
                 )
-
 
             # -- Centralized evaluation -- Evaluate model using strategy implementation -- Not used in the paper
             res_cen = self.strategy.evaluate(current_round, parameters=self.parameters)
@@ -153,8 +152,8 @@ class Server:
                     server_round=current_round, metrics=metrics_cen
                 )
 
-
             # -- Distributed evaluation -- Evaluate model on a sample of available clients
+            print("\033[91m" + f"Original Flower Evaluation (check it i dont know which models are evaluating)" + "\033[0m")
             res_fed = self.evaluate_round(server_round=current_round, timeout=timeout)
             if res_fed is not None:
                 loss_fed, evaluate_metrics_fed, _ = res_fed
@@ -175,7 +174,7 @@ class Server:
         self,
         server_round: int,
         timeout: Optional[float],
-        descriptor_extraction: bool = False,
+        # descriptor_extraction: bool = False,
     ) -> Optional[
         Tuple[Optional[float], Dict[str, Scalar], EvaluateResultsAndFailures]
     ]:
@@ -185,7 +184,7 @@ class Server:
             server_round=server_round,
             parameters=self.parameters,
             client_manager=self._client_manager,
-            descriptor_extraction=descriptor_extraction,                           #
+            # descriptor_extraction=descriptor_extraction,                           #
         )
         if not client_instructions:
             log(INFO, "configure_evaluate: no clients selected, skipping evaluation")
@@ -218,7 +217,7 @@ class Server:
         ] = self.strategy.aggregate_evaluate(server_round, 
                                              results, 
                                              failures,
-                                             descriptor_extraction=descriptor_extraction
+                                            #  descriptor_extraction=descriptor_extraction
                                              )
 
         loss_aggregated, metrics_aggregated = aggregated_result
@@ -272,7 +271,8 @@ class Server:
         ] = self.strategy.aggregate_fit(server_round, 
                                         results, 
                                         failures, 
-                                        descriptor_extraction=descriptor_extraction)
+                                        descriptor_extraction=descriptor_extraction
+                                        )
 
         parameters_aggregated, metrics_aggregated = aggregated_result
         return parameters_aggregated, metrics_aggregated, (results, failures)
