@@ -1,6 +1,6 @@
 # Overall settings
 k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'fedavg' # ['fedavg', 'fedprox', 'cfl_oneshot', 'cfl_drift', 'optimal_FL']
+strategy = 'cfl_drift' # ['fedavg', 'fedprox', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 10
@@ -22,8 +22,13 @@ pos_multiplier = 6 # positional embedding multiplier
 eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
-# Strategy fedprox
-fedprox_proximal_mu = 0.1
+# Dynamic dataset
+# drifting_type = 'trDR_teDR'
+# dataset_name = "MNIST"
+
+
+
+
 
 # Dataset settings
 dataset_name = "MNIST" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "EMNIST"]
@@ -38,7 +43,7 @@ plot_clients = False
 args = {
     'set_rotation': True,
     'set_color': True,
-    'rotations':4,
+    'rotations':1,
     'colors':1,
 }
 

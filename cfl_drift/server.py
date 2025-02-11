@@ -24,6 +24,7 @@ import argparse
 import pickle
 import numpy as np
 from functools import reduce
+from scipy.spatial.distance import euclidean, cosine
 from logging import WARNING
 from torch.utils.data import DataLoader
 from collections import OrderedDict
@@ -199,14 +200,14 @@ def aggregate(results: List[Tuple[NDArrays, int]]) -> NDArrays:
     return weights_prime
 
 
-def weighted_aggregate(results: List[Tuple[NDArrays, int]], weight:NDArrays) -> NDArrays:
+def weighted_aggregate(results: List[Tuple[NDArrays, int]], client_weight_distance:NDArrays) -> NDArrays:
     """Compute weighted average with distances."""
     # Calculate the total number of examples used during training
-    num_examples_total = sum([num_examples for _, num_examples in results])
+    num_examples_total = sum([num_examples * w for (_, num_examples), w in zip(results, client_weight_distance)])
 
     # Create a list of weights, each multiplied by the related number of examples
     weighted_weights = [
-        [layer * num_examples * w for layer in weights] for (weights, num_examples), w in zip(results, weight)
+        [layer * num_examples * w for layer in weights] for (weights, num_examples), w in zip(results, client_weight_distance)
     ]
 
     # Compute average weights of each layer
@@ -229,6 +230,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         self.client_descriptors = {} # [client_id] = descriptors
         self.aggregated_parameters_global = None
         self.fedavg = True # True: Fedavg training, False: personalized clustering # 0: not started, 1: to cluster, 2: done
+        # self.starting_round = True
+        self.parent_client_descrs = None
+        # ZZZ
         self.accuracy_trend = [] # accuracy trend for clustering
 
 
@@ -435,10 +439,56 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # np.save(f'results/client_descr.npy', client_descr)
                 # np.save(f'results/client_id_plot.npy', client_id_plot)
 
-                # Distance metrics on clients descriptors
-                # TODO: implement distance metrics
-                # ... client_distnaces is th eoutpur 
-                client_distances = [np.ones(cfg.n_clients) for _ in range(cfg.n_clients)]
+
+                def cal_weights(
+                    parent_client_descrs: List[np.ndarray] = None,
+                    cur_client_descrs: List[np.ndarray] = None,
+                    dis_func: str = "euclidean" # "euclidean", "cosine"
+                ) -> List[np.ndarray]:
+                    '''
+                    Calculate the weights for the weighted aggregation
+
+                    Args:
+                        starting_round: bool - if it is the first round
+                        parent_client_descr: List[np.ndarray] - descriptors of the parent clients (linked to one model)
+                        cur_client_descr: List[np.ndarray] - descriptors of the current clients
+
+                    Returns:
+                        List[np.ndarray]: weights for the weighted aggregation (normalized)
+                    '''
+                    # starting round, one fedavg model, still do fedavg
+                    if parent_client_descrs is None:
+                        return [np.full(cfg.n_clients, 1 / cfg.n_clients) for _ in range(cfg.n_clients)]
+                    else:
+                            if dis_func == "euclidean":
+                                distance_fn = euclidean
+                            elif dis_func == "cosine":
+                                distance_fn = cosine
+                            else:
+                                raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
+                    weight_matrix = []
+                    
+                    for cur_descr in cur_client_descrs:
+                        weights = []
+                        for par_descr in parent_client_descrs:
+                            dist = distance_fn(cur_descr, par_descr)
+                            weights.append(1.0 / (dist + 1e-8))
+                        
+                        weights = np.array(weights)
+                        normalized_weights = weights / weights.sum()
+                        weight_matrix.append(normalized_weights)
+
+                    return weight_matrix   
+
+                client_distances = cal_weights(
+                    parent_client_descrs=self.parent_client_descrs,
+                    cur_client_descrs=client_descr,
+                    dis_func="cosine"
+                )
+
+                self.parent_client_descrs = client_descr
+
+                # client_distances = [np.ones(cfg.n_clients) for _ in range(cfg.n_clients)]
                 print(f"\033[91mRound {server_round} - Client distances: {client_distances}\033[0m")
 
                 # Aggregation

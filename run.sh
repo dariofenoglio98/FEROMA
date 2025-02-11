@@ -25,8 +25,8 @@ for fold in $(seq 0 $(($k_folds - 1))); do
     echo -e "\n\033[1;36mStarting fold $((fold + 1))\033[0m\n"
 
     # Clean and create datasets
-    # rm -rf data/cur_datasets/* 
-    # python public/generate_datasets.py --fold "$fold"
+    rm -rf data/cur_datasets/* 
+    python public/generate_datasets.py --fold "$fold"
 
     # exit
 
