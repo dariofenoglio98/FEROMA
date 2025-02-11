@@ -468,12 +468,16 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                                 raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
                     weight_matrix = []
                     
+                    i=0
                     for cur_descr in cur_client_descrs:
                         weights = []
                         for par_descr in parent_client_descrs:
                             dist = distance_fn(cur_descr, par_descr)
+                            if server_round == 7 and i == 0:
+                                print(f"Distance: {dist}")
+                                
                             weights.append(1.0 / (dist + 1e-8))
-                        
+                        i+=1
                         weights = np.array(weights)
                         normalized_weights = weights / weights.sum()
                         weight_matrix.append(normalized_weights)
@@ -485,6 +489,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                     cur_client_descrs=client_descr,
                     dis_func="cosine"
                 )
+                # print(f"\033[91m\nRound {server_round} - Client descriptors: {client_descr}\n\033[0m")
+                # print(f"\033[91m\nRound {server_round} - Client descriptors previous: {self.parent_client_descrs}\n\033[0m")
+
 
                 self.parent_client_descrs = client_descr
 
@@ -795,7 +802,7 @@ def main() -> None:
         else:
             raise ValueError("Invalid selected_descriptors")
     
-        # Find the closest model to the client
+        # Find the closest model to the client: TODO: use the right distance function
         client_model_cid = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
         
         # Load respective cluster model

@@ -57,7 +57,8 @@ class FlowerClient(fl.client.NumPyClient):
 
     def load_current_data(self,
                           cur_round,
-                          train=True) -> DataLoader:
+                          train=True,
+                          descriptor_extraction=False) -> DataLoader:
         # load raw data
         if not cfg.training_drifting:
             cur_data = np.load(f'../data/cur_datasets/client_{self.client_id}.npy', allow_pickle=True).item()
@@ -85,6 +86,9 @@ class FlowerClient(fl.client.NumPyClient):
             return DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
         else:
             val_dataset = models.CombinedDataset(val_features, val_labels, transform=None)
+            # randomly sample half of the validation data
+            if descriptor_extraction:
+                val_dataset, _ = train_test_split(val_dataset, test_size=0.5, random_state=cfg.random_seed+cur_round)
             return DataLoader(val_dataset, batch_size=cfg.test_batch_size, shuffle=False)
 
     # override
@@ -100,21 +104,25 @@ class FlowerClient(fl.client.NumPyClient):
     # override
     def fit(self, parameters, config):
         cur_round = config["current_round"]
-        cur_train_loader = self.load_current_data(cur_round, train=True)
         
         if config["extract_descriptors"] and (config["fedavg"] == False):
+            samples_val_loader = self.load_current_data(cur_round, train=False, descriptor_extraction=True)
+
             # set the global model on the client to extract descriptors
             if self.global_model_loaded == False:
                 self.global_model_loaded = True
                 self.global_model.load_state_dict(torch.load(f"checkpoints/{cfg.default_path}/{cfg.non_iid_type}_global_model.pth", weights_only=False))
             
             # Extract descriptors
-            descriptors = models.ModelEvaluator(test_loader=cur_train_loader, device=self.device).extract_descriptors(model=self.global_model, \
+
+            descriptors = models.ModelEvaluator(test_loader=samples_val_loader, device=self.device).extract_descriptors(model=self.global_model, \
                                                             client_id=self.client_id, max_latent_space=config["max_latent_space"])  
             
-            return self.last_trained_parameters, len(cur_train_loader.dataset), descriptors
+            return self.last_trained_parameters, len(samples_val_loader.dataset), descriptors
 
         else: 
+            cur_train_loader = self.load_current_data(cur_round, train=True)
+
             # set updated/aggregated parameters
             self.set_parameters(parameters)
 

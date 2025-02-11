@@ -1,9 +1,9 @@
 # Overall settings
 k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'cfl_drift' # ['fedavg', 'fedprox', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
+strategy = 'fedavg' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
-n_clients = 10
+n_clients = 20
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
@@ -23,29 +23,43 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # Dynamic dataset
-# drifting_type = 'trDR_teDR'
-# dataset_name = "MNIST"
-
-
+drifting_type = 'trDR_teDR'
+dataset_name = "MNIST"
+non_iid_type = 'Py'
+verbose = True
+count_labels = True
+plot_clients = False
+args = {
+    # 'rotation_bank': 4,
+    # 'color_bank': 3,
+    # 'mixing_num': 6,
+    'py_bank':6,
+    'classes_per_set':3,
+    'DA_dataset_scaling': 3.0,
+    'DA_epoch_locker_num': 5,
+    'DA_random_locker': False,
+    'DA_max_dist': 6,
+    'DA_continual_divergence': False
+}
 
 
 
 # Dataset settings
-dataset_name = "MNIST" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "EMNIST"]
-drifting_type = 'static' # ['static', 'trND_teDR', 'trDA_teDR', 'trDA_teND', 'trDR_teDR', 'trDR_teND'] refer to ANDA page for more details
-non_iid_type = 'feature_skew_strict' # ['feature_skew_strict', 'label_skew_strict', 'feature_condition_skew', 'label_condition_skew'] refer to ANDA page for more details
-verbose = True
-count_labels = True
-plot_clients = False
+# dataset_name = "MNIST" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "EMNIST"]
+# drifting_type = 'static' # ['static', 'trND_teDR', 'trDA_teDR', 'trDA_teND', 'trDR_teDR', 'trDR_teND'] refer to ANDA page for more details
+# non_iid_type = 'feature_skew_strict' # ['feature_skew_strict', 'label_skew_strict', 'feature_condition_skew', 'label_condition_skew'] refer to ANDA page for more details
+# verbose = True
+# count_labels = True
+# plot_clients = False
 
-# Careful with the args applying to your settings above
-# # FEATURE DISTRIBUTION SHIFT P(X) - (feature_skew_strict) 
-args = {
-    'set_rotation': True,
-    'set_color': True,
-    'rotations':1,
-    'colors':1,
-}
+# # Careful with the args applying to your settings above
+# # # FEATURE DISTRIBUTION SHIFT P(X) - (feature_skew_strict) 
+# # args = {
+# #     'set_rotation': True,
+# #     'set_color': True,
+# #     'rotations':4,
+# #     'colors':3,
+# # }
 
 # # LABEL DISTRIBUTION SHIFT P(Y) - (label_skew_strict)
 # args = {
@@ -77,7 +91,7 @@ model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
 batch_size = 64
 test_batch_size = 64
 client_eval_ratio = 0.2
-n_rounds = 10
+n_rounds = 30
 local_epochs = 2
 lr = 0.005
 momentum = 0.9

@@ -447,7 +447,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # Output the final eps, the number of clusters, and the new labels
                 print(f"Number of clusters (including reassigned noise points): {len(set(cluster_labels))}")
                 print(f"Cluster labels after reassigning noise points: {cluster_labels}")
-                self.real_n_clusters = np.load(f'../data/cur_datasets/n_clusters.npy').item()
+                # TODO
+                # self.real_n_clusters = np.load(f'../data/cur_datasets/n_clusters.npy').item()
+                self.real_n_clusters = 10
 
                 _ = utils.calculate_centroids(client_descr, clustering, cluster_labels)
                 utils.cluster_plot(X_reduced, cluster_labels, client_id_plot, server_round, name="DBSCAN")
@@ -455,7 +457,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
             # DBSCAN_no_outliers
             elif cfg.cfl_oneshot_CLIENT_CLUSTER_METHOD == 5:
                 # known prior number of clusters
-                n_clusters = np.load(f'../data/cur_datasets/n_clusters.npy').item()
+                # TODO
+                # n_clusters = np.load(f'../data/cur_datasets/n_clusters.npy').item()
+                n_clusters = 10
                 self.real_n_clusters = n_clusters
                 
                 # Use Kmeans for supervised clustering
