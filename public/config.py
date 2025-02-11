@@ -1,6 +1,6 @@
 # Overall settings
 k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'fedavg' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
+strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 20
@@ -17,10 +17,17 @@ cfl_oneshot_CLIENT_CLUSTER_METHOD = 4 # ['Kmeans', 'DBSCAN', 'HDBSCAN', 'DBSCAN_
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
-pos_multiplier = 6 # positional embedding multiplier 
+# pos_multiplier = 6 # positional embedding multiplier 
 # check_cluster_at_inference = False ALWAYS BOTH  # True if you want to check the cluster at inference time (test-time inference for test drifting-find closest cluster to you), False otherwise (like baselines)
 eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
+
+# DFUL settings
+distance_function = "cosine" # ['cosine', 'euclidean']
+n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction  
+extended_descriptors = True #mean and std 
+weighted_metric_descriptors = False
+selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
 
 # Dynamic dataset
 drifting_type = 'trDR_teDR'
@@ -91,7 +98,7 @@ model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
 batch_size = 64
 test_batch_size = 64
 client_eval_ratio = 0.2
-n_rounds = 30
+n_rounds = 20
 local_epochs = 2
 lr = 0.005
 momentum = 0.9

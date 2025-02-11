@@ -86,10 +86,19 @@ class FlowerClient(fl.client.NumPyClient):
             return DataLoader(train_dataset, batch_size=cfg.batch_size, shuffle=True)
         else:
             val_dataset = models.CombinedDataset(val_features, val_labels, transform=None)
-            # randomly sample half of the validation data
+            # randomly sample the data for descriptor extraction
             if descriptor_extraction:
-                val_dataset, _ = train_test_split(val_dataset, test_size=0.5, random_state=cfg.random_seed+cur_round)
+                if cfg.n_stochastic_sampling > 1:
+                    val_dataset_list = []
+                    for i in range(cfg.n_stochastic_sampling):
+                        val_subset, _ = train_test_split(val_dataset, test_size=0.5, random_state= cfg.random_seed**4 + + i)
+                        val_dataset_list.append(val_subset)
+                    val_dataset = torch.utils.data.ConcatDataset(val_dataset_list)
+                else:
+                    val_dataset, _ = train_test_split(val_dataset, test_size=0.5, random_state=cfg.random_seed + cur_round)
             return DataLoader(val_dataset, batch_size=cfg.test_batch_size, shuffle=False)
+
+
 
     # override
     def get_parameters(self, config):

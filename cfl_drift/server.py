@@ -487,7 +487,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 client_distances = cal_weights(
                     parent_client_descrs=self.parent_client_descrs,
                     cur_client_descrs=client_descr,
-                    dis_func="cosine"
+                    dis_func=cfg.distance_function
                 )
                 # print(f"\033[91m\nRound {server_round} - Client descriptors: {client_descr}\n\033[0m")
                 # print(f"\033[91m\nRound {server_round} - Client descriptors previous: {self.parent_client_descrs}\n\033[0m")
@@ -803,8 +803,17 @@ def main() -> None:
             raise ValueError("Invalid selected_descriptors")
     
         # Find the closest model to the client: TODO: use the right distance function
-        client_model_cid = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
-        
+        # client_model_cid_old = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
+        if cfg.distance_function == "euclidean":
+            distance_fn = euclidean
+        elif cfg.distance_function == "cosine":
+            distance_fn = cosine
+        else:
+            raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
+        descriptors = np.array(descriptors[0])
+        client_model_cid = min(client_descriptors, key=lambda cid: distance_fn(descriptors, client_descriptors[cid]))
+        # print(f"\033[93mClient {client_id} - Old closest centroid: {client_model_cid_old}, New closest centroid: {client_model_cid}\033[0m")
+
         # Load respective cluster model
         test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
                                         input_size=cfg.input_size).to(device)
@@ -815,7 +824,13 @@ def main() -> None:
         print(f"\033[93mClient {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid}\033[0m")
         accuracies.append(accuracy_test)
         losses.append(loss_test)
-        
+
+        # # Load respective cluster model with another distance
+        # test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+        #                                 input_size=cfg.input_size).to(device)
+        # test_client_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{client_model_cid_old}_trained.pth", weights_only=False))
+        # loss_test, accuracy_test = models.simple_test(test_client_model, device, test_loader)
+        # print(f"\033[93mClient Euclidean {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid_old}\033[0m")        
         
         # --- Participating clients: assign known cluster ---
         # client_cluster = cluster_labels_inference[client_id]
