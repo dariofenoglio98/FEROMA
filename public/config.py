@@ -1,13 +1,13 @@
 # Overall settings
 k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'cfl_drift' # ['fedavg', 'fedprox', 'cfl_oneshot', 'cfl_drift', 'optimal_FL']
+strategy = 'fedavg' # ['fedavg', 'fedprox', 'cfl_oneshot', 'cfl_drift', 'optimal_FL']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 10
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
-differential_privacy_descriptors = True
+differential_privacy_descriptors = False
 epsilon = 1.0
 # sensitivity = 1.0 # automatically calculated
 

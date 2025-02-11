@@ -21,6 +21,7 @@ import copy
 import time
 import torch
 import argparse
+import pickle
 import numpy as np
 from functools import reduce
 from logging import WARNING
@@ -163,7 +164,6 @@ def fit_config(server_round: int):
     return config
 
 
-
 # Custom weighted average function
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     # Multiply accuracy of each client by number of examples used
@@ -174,13 +174,11 @@ def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
     return {"accuracy": sum(accuracies) / sum(examples)}
 
 
-
 def weighted_loss_avg(results: List[Tuple[int, float]]) -> float:
     """Aggregate evaluation results obtained from multiple clients."""
     num_total_evaluation_examples = sum([num_examples for num_examples, _ in results])
     weighted_losses = [num_examples * loss for num_examples, loss in results]
     return sum(weighted_losses) / num_total_evaluation_examples
-
 
 
 def aggregate(results: List[Tuple[NDArrays, int]]) -> NDArrays:
@@ -218,6 +216,7 @@ def weighted_aggregate(results: List[Tuple[NDArrays, int]], weight:NDArrays) -> 
     ]
     return weights_prime
 
+
 # Custom strategy to save model after each round
 class SaveModelStrategy(fl.server.strategy.FedAvg):
     def __init__(self, model, path, descriptors_scaler, *args, **kwargs):
@@ -227,6 +226,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         self.descriptors_scaler = descriptors_scaler # used for scaling client descriptors
 
         self.aggregated_client_parameters = {} # [cluster_label] = model parameters
+        self.client_descriptors = {} # [client_id] = descriptors
         self.aggregated_parameters_global = None
         self.fedavg = True # True: Fedavg training, False: personalized clustering # 0: not started, 1: to cluster, 2: done
         self.accuracy_trend = [] # accuracy trend for clustering
@@ -256,7 +256,6 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 config["fedavg"] = True
                 config["extract_descriptors"] = False
             
-
         # Sample clients
         sample_size, min_num_clients = self.num_fit_clients(
             client_manager.num_available()
@@ -292,10 +291,8 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
     ) -> Tuple[Optional[Parameters], Dict[str, Scalar]]:
         """Aggregate model weights using weighted average and store checkpoint"""
         
-        
         # Fedavg
         if self.fedavg:
-            # return super().aggregate_fit(server_round, results, failures)
             # Federated averaging - from traditional code
             if not results:
                 return None, {}
@@ -335,7 +332,6 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         
         else:
             if descriptor_extraction:
-
                 # Extract & scale client descriptors and self-assigned client ids, FLWR cids
                 client_descr, client_id_plot, client_cid_list  = [], [], []
                 for proxy, res in results:
@@ -432,7 +428,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # print(f"\033[91mRound {server_round} - Scaled client descriptors {client_descr}\033[0m")
                 
                 # Apply PCA to reduce the data to 2D for visualization
-                X_reduced = PCA(n_components=2).fit_transform(client_descr)
+                # X_reduced = PCA(n_components=2).fit_transform(client_descr)
 
                 # temp save
                 # save descriptors and cid list
@@ -440,6 +436,8 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # np.save(f'results/client_id_plot.npy', client_id_plot)
 
                 # Distance metrics on clients descriptors
+                # TODO: implement distance metrics
+                # ... client_distnaces is th eoutpur 
                 client_distances = [np.ones(cfg.n_clients) for _ in range(cfg.n_clients)]
                 print(f"\033[91mRound {server_round} - Client distances: {client_distances}\033[0m")
 
@@ -459,54 +457,71 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 cur_round_cids = [proxy.cid for proxy, _ in results]
         
                 # Aggregate each cluster
-                for cid, w in zip(cur_round_cids, client_distances):
+                for n, (cid, w) in enumerate(zip(cur_round_cids, client_distances)):
+                    print(f"Aggregating cluster {cid}...")
                     self.aggregated_client_parameters[cid] = ndarrays_to_parameters(weighted_aggregate(weights_results, w))
+                    self.client_descriptors[cid] = client_descr[n]
             
+                # if last round, save the models and the respective descriptors (here i'm saving the just aggregated model)
+                if server_round == cfg.n_rounds:
+                    # for cid, params in self.aggregated_client_parameters.items():
+                    #     print(f"Saving round {server_round} aggregated_client_parameters_{cid}...")
+                    #     # Convert `Parameters` to `List[np.ndarray]`
+                    #     aggregated_ndarrays: List[np.ndarray] = parameters_to_ndarrays(params)
+                    #     # Convert `List[np.ndarray]` to PyTorch`state_dict`
+                    #     params_dict = zip(self.model.state_dict().keys(), aggregated_ndarrays)
+                    #     state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+                    #     self.model.load_state_dict(state_dict, strict=True)
+                    #     # Overwrite the model
+                    #     torch.save(self.model.state_dict(), f"checkpoints/{self.path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{cid}.pth")
+                        
+                    # save client descriptors
+                    with open(f'results/{self.path}/client_descriptors.pkl', 'wb') as f:
+                        pickle.dump(self.client_descriptors, f)
+                    
                 # i pass this to not raise an error
                 return self.aggregated_parameters_global, {}
 
             else:
                 # do not do nothing - no aggregation 
                 # pass this to not raise an error
+                
+                # we can save also here the model (after local training)
+                # Aggregation
+                if not results:
+                    return None, {}
+                # Do not aggregate if there are failures and failures are not accepted
+                if not self.accept_failures and failures:
+                    return None, {}
+
+                # Convert results
+                weights_results = [
+                    (parameters_to_ndarrays(fit_res.parameters), fit_res.num_examples)
+                    for _, fit_res in results
+                ]
+
+                cur_round_cids = [proxy.cid for proxy, _ in results]
+
+                # Save trained client models
+                trained_models = {}
+                for n, cid in enumerate(cur_round_cids):
+                    trained_models[cid] = ndarrays_to_parameters(weights_results[n][0])
+            
+                # if last round, save the models and the respective descriptors (here i'm saving the just aggregated model)
+                if server_round == cfg.n_rounds:
+                    for cid, params in trained_models.items():
+                        print(f"Saving round {server_round} trained_model_{cid}...")
+                        # Convert `Parameters` to `List[np.ndarray]`
+                        aggregated_ndarrays: List[np.ndarray] = parameters_to_ndarrays(params)
+                        # Convert `List[np.ndarray]` to PyTorch`state_dict`
+                        params_dict = zip(self.model.state_dict().keys(), aggregated_ndarrays)
+                        state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+                        self.model.load_state_dict(state_dict, strict=True)
+                        # Overwrite the model
+                        torch.save(self.model.state_dict(), f"checkpoints/{self.path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{cid}_trained.pth")
+                
                 return self.aggregated_parameters_global, {}
 
-        # # Aggregate custom metrics if aggregation fn was provided   NO FIT METRICS AGGREGATION FN PROVIDED - SKIPPED FOR NOW
-        # aggregated_metrics = {}
-        # if self.fit_metrics_aggregation_fn:
-        #     fit_metrics = [(res.num_examples, res.metrics) for _, res in results]
-        #     aggregated_metrics = self.fit_metrics_aggregation_fn(fit_metrics)
-        # elif server_round == 1:  # Only log this warning once
-        #     log(WARNING, "No fit_metrics_aggregation_fn provided")
-            
-        # ################################################################################
-        # # Save model
-        # ################################################################################
-        # # Clustered, save cluster models
-        # if self.cluster_status == 2:
-        #     # Save the aggregated cluster models
-        #     for cl, params in self.aggregated_cluster_parameters.items():
-        #         print(f"Saving round {server_round} aggregated_cluster_parameters_{cl}...")
-        #         # Convert `Parameters` to `List[np.ndarray]`
-        #         aggregated_ndarrays: List[np.ndarray] = parameters_to_ndarrays(params)
-        #         # Convert `List[np.ndarray]` to PyTorch`state_dict`
-        #         params_dict = zip(self.model.state_dict().keys(), aggregated_ndarrays)
-        #         state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-        #         self.model.load_state_dict(state_dict, strict=True)
-        #         # Overwrite the model
-        #         torch.save(self.model.state_dict(), f"checkpoints/{self.path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cluster_{cl}.pth")
-        # # Not yet clustered, save global model
-        # else:
-        #     print(f"Saving round {server_round} aggregated_parameters...")
-        #     aggregated_ndarrays: List[np.ndarray] = parameters_to_ndarrays(self.aggregated_parameters_global)
-        #     # Convert `List[np.ndarray]` to PyTorch`state_dict`
-        #     params_dict = zip(self.model.state_dict().keys(), aggregated_ndarrays)
-        #     state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
-        #     self.model.load_state_dict(state_dict, strict=True)
-        #     # Overwrite the model 
-        #     torch.save(self.model.state_dict(), f"checkpoints/{self.path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_server.pth")
-        
-        # return self.aggregated_parameters_global, aggregated_metrics
-   
    
     # Override configure_evaluate method to add custom configuration
     def configure_evaluate(
@@ -675,32 +690,26 @@ def main() -> None:
     best_loss_round, best_acc_round = utils.plot_loss_and_accuracy(loss, accuracy, show=False, fold=args.fold)
     
     # Read cluster centroids from json - for test-time inference
-    cluster_centroids = np.load(f'results/{exp_path}/centroids_{cfg.non_iid_type}_n_clients_{cfg.n_clients}.npy', allow_pickle=True).item()
+    client_descriptors = np.load(f'results/{exp_path}/client_descriptors.pkl', allow_pickle=True)
     if cfg.selected_descriptors == "Pxy":
-        cluster_centroids = {label: centroid[cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] for label, centroid in cluster_centroids.items()} # only latent space
-        print(f"\033[93mCluster centroids: {cluster_centroids}\033[0m\n")
+        client_descriptors = {cid: descriptor[cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] for cid, descriptor in client_descriptors.items()} # only latent space
+        # print(f"\033[93mCluster centroids: {client_descriptors}\033[0m\n")
     elif cfg.selected_descriptors == "Px":
-        print(f"\033[93mCluster centroids: {cluster_centroids}\033[0m\n") # only latent space
+        # print(f"\033[93mCluster centroids: {client_descriptors}\033[0m\n") # only latent space
+        pass
     elif cfg.selected_descriptors == "Py":
-        # print in red color
-        print(f"\033[93mYou cannot use Py at inference, dummy guy! I will read cluster assignement during training for inference\033[0m\n")
-        cluster_labels_inference = np.load(f'results/{exp_path}/cluster_labels_inference_{cfg.non_iid_type}_n_clients_{cfg.n_clients}.npy', allow_pickle=True).item()
-        print(f"\033[93mCluster labels: {cluster_labels_inference}\033[0m\n")
+        raise ValueError("You cannot use Py at inference, dummy guy! I will read cluster assignement during training for inference")
     elif cfg.selected_descriptors in ["Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short"]:
-        cluster_centroids = {label: centroid[:cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor] for label, centroid in cluster_centroids.items()}
-        print(f"\033[93mCluster centroids: {cluster_centroids}\033[0m\n") # only latent space
+        client_descriptors = {cid: descriptor[:cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor] for cid, descriptor in client_descriptors.items()}
+        # print(f"\033[93mCluster centroids: {client_descriptors}\033[0m\n") # only latent space
     else:
         raise ValueError("Invalid selected_descriptors")
-    # Read cluster assignement during training for inference (known)
-    cluster_labels_inference = np.load(f'results/{exp_path}/cluster_labels_inference_{cfg.non_iid_type}_n_clients_{cfg.n_clients}.npy', allow_pickle=True).item()
-    print(f"\033[93mRead cluster assignement during training for inference\033[0m\n")
-    print(f"\033[93mCluster labels: {cluster_labels_inference}\033[0m\n")
     
-    # Load global model for evaluation
+    # Load global model for evaluation (descriptor extraction)
     evaluation_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
                                           input_size=cfg.input_size).to(device)
-    evaluation_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_server.pth", weights_only=False))
-
+    evaluation_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_global_model.pth", weights_only=False))
+    
     # Evaluate the model on the client datasets    
     losses, accuracies = [], []
     losses_known, accuracies_known = [], []
@@ -736,40 +745,40 @@ def main() -> None:
         else:
             raise ValueError("Invalid selected_descriptors")
     
-        # Find the closest cluster centroid
-        client_cluster = min(cluster_centroids, key=lambda k: np.linalg.norm(descriptors - cluster_centroids[k]))
+        # Find the closest model to the client
+        client_model_cid = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
         
         # Load respective cluster model
-        cluster_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+        test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
                                         input_size=cfg.input_size).to(device)
-        cluster_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cluster_{client_cluster}.pth", weights_only=False))
-        
+        test_client_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{client_model_cid}_trained.pth", weights_only=False))
+
         # Evaluate
-        loss_test, accuracy_test = models.simple_test(cluster_model, device, test_loader)
-        print(f"\033[93mClient {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Closest centroid {client_cluster}\033[0m")
+        loss_test, accuracy_test = models.simple_test(test_client_model, device, test_loader)
+        print(f"\033[93mClient {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid}\033[0m")
         accuracies.append(accuracy_test)
         losses.append(loss_test)
         
         
         # --- Participating clients: assign known cluster ---
-        client_cluster = cluster_labels_inference[client_id]
+        # client_cluster = cluster_labels_inference[client_id]
 
-        # Load respective cluster model
-        cluster_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
-                                        input_size=cfg.input_size).to(device)
-        cluster_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cluster_{client_cluster}.pth", weights_only=False))
+        # # Load respective cluster model
+        # cluster_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+        #                                 input_size=cfg.input_size).to(device)
+        # cluster_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cluster_{client_cluster}.pth", weights_only=False))
         
-        # Evaluate
-        loss_test, accuracy_test = models.simple_test(cluster_model, device, test_loader)
-        print(f"\033[93mClient (known) {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Closest centroid {client_cluster}\033[0m")
-        accuracies_known.append(accuracy_test)
-        losses_known.append(loss_test)
+        # # Evaluate
+        # loss_test, accuracy_test = models.simple_test(cluster_model, device, test_loader)
+        # print(f"\033[93mClient (known) {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Closest centroid {client_cluster}\033[0m")
+        # accuracies_known.append(accuracy_test)
+        # losses_known.append(loss_test)
 
 
 
     # print average loss and accuracy
     print(f"\n\033[93mAverage Loss: {np.mean(losses):.3f}, Average Accuracy: {np.mean(accuracies)*100:.2f}\033[0m")
-    print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
+    # print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")
     
     # Save metrics as numpy array
@@ -778,13 +787,13 @@ def main() -> None:
         "accuracy": accuracies,
         "average_loss": np.mean(losses),
         "average_accuracy": np.mean(accuracies),
-        "loss_known": losses_known,
-        "accuracy_known": accuracies_known,
-        "average_loss_known": np.mean(losses_known),
-        "average_accuracy_known": np.mean(accuracies_known),
+        # "loss_known": losses_known,
+        # "accuracy_known": accuracies_known,
+        # "average_loss_known": np.mean(losses_known),
+        # "average_accuracy_known": np.mean(accuracies_known),
         "time": round((time.time() - start_time)/60, 2),
-        "identified_clusters": strategy.n_clusters,
-        "real_clusters": strategy.real_n_clusters,
+        # "identified_clusters": strategy.n_clusters,
+        # "real_clusters": strategy.real_n_clusters,
     }
     np.save(f'results/{exp_path}/test_metrics_fold_{args.fold}.npy', metrics)
     

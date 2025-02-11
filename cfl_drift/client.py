@@ -136,10 +136,13 @@ class FlowerClient(fl.client.NumPyClient):
             return self.last_trained_parameters, len(cur_train_loader.dataset), {}
         
     def evaluate(self, parameters, config):
-        self.set_parameters(parameters)
         cur_round = config["current_round"]
         cur_val_loader = self.load_current_data(cur_round, train=False)
+        
+        # set the last trained parameters
+        self.set_parameters(self.last_trained_parameters)
 
+        # Evaluate the model
         loss_trad, accuracy_trad, f1_score_trad, new_max_latent_space = \
             models.ModelEvaluator(test_loader=cur_val_loader, device=self.device).evaluate(self.model)    
 

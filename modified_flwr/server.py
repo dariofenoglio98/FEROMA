@@ -153,7 +153,7 @@ class Server:
                 )
 
             # -- Distributed evaluation -- Evaluate model on a sample of available clients
-            print("\033[91m" + f"Original Flower Evaluation (check it i dont know which models are evaluating)" + "\033[0m")
+            print("\033[91m" + f"Original Flower Evaluation" + "\033[0m")
             res_fed = self.evaluate_round(server_round=current_round, timeout=timeout)
             if res_fed is not None:
                 loss_fed, evaluate_metrics_fed, _ = res_fed
