@@ -20,6 +20,7 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.decomposition import PCA
 from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from threadpoolctl import threadpool_limits
 
 import public.config as cfg
 
@@ -328,14 +329,16 @@ class ModelEvaluator:
         # create random_points to fit PCA (min=0, max=max_latent_space)
         np.random.seed(seed=1)
         random_points = np.random.uniform(0, max_latent_space, size=(200, latent_all.shape[1]))
-        pca = PCA(n_components=cfg.len_latent_space_descriptor)  
-        # fit PCA on random_points
-        pca.fit(random_points)
-        # transform latent_all
-        latent_all = pca.transform(latent_all)
+        with threadpool_limits(limits=1): # faster on linux
+            pca = PCA(n_components=cfg.len_latent_space_descriptor)  
+            # fit PCA on random_points
+            pca.fit(random_points)
+            # transform latent_all
+            latent_all = pca.transform(latent_all)
         
         if cfg.differential_privacy_descriptors:
-            random_points_transformed = pca.transform(random_points)
+            with threadpool_limits(limits=1): # faster on linux
+                random_points_transformed = pca.transform(random_points)
             global_min = min(np.minimum(latent_all.min(axis=0), random_points_transformed.min(axis=0)))
             global_max = max(np.maximum(latent_all.max(axis=0), random_points_transformed.max(axis=0)))
             
@@ -350,7 +353,8 @@ class ModelEvaluator:
         if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
             latent_cond = np.array(latent_cond)
             # transform latent_all
-            latent_cond = pca.transform(latent_cond)
+            with threadpool_limits(limits=1): # faster on linux
+                latent_cond = pca.transform(latent_cond)
             # Mean and std on first dimension
             latent_mean_cond = list(np.mean(latent_cond, axis=0))
             latent_std_cond = list(np.std(latent_cond, axis=0))
@@ -408,7 +412,8 @@ class ModelEvaluator:
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
                     # transform latent_all
-                    latent_subset = pca.transform(latent_subset)
+                    with threadpool_limits(limits=1): # faster on linux
+                        latent_subset = pca.transform(latent_subset)
                     # Mean and std on first dimension
                     latent_mean_by_label.append(list(np.mean(latent_subset, axis=0)))
                     latent_std_by_label.append(list(np.std(latent_subset, axis=0)))
@@ -580,11 +585,12 @@ class ModelEvaluator:
         # create random_points to fit PCA (min=0, max=max_latent_space)
         np.random.seed(seed=1)
         random_points = np.random.uniform(0, max_latent_space, size=(200, latent_all.shape[1]))
-        pca = PCA(n_components=cfg.len_latent_space_descriptor)   
-        # fit PCA on random_points
-        pca.fit(random_points)
-        # transform latent_all
-        latent_all = pca.transform(latent_all)
+        with threadpool_limits(limits=1): # faster on linux
+            pca = PCA(n_components=cfg.len_latent_space_descriptor)   
+            # fit PCA on random_points
+            pca.fit(random_points)
+            # transform latent_all
+            latent_all = pca.transform(latent_all)
         # Mean and std on first dimension
         latent_mean = list(np.mean(latent_all, axis=0))
         latent_std = list(np.std(latent_all, axis=0))
@@ -592,7 +598,8 @@ class ModelEvaluator:
         if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
             latent_cond = np.array(latent_cond)
             # transform latent_all
-            latent_cond = pca.transform(latent_cond)
+            with threadpool_limits(limits=1): # faster on linux
+                latent_cond = pca.transform(latent_cond)
             # Mean and std on first dimension
             latent_mean_cond = list(np.mean(latent_cond, axis=0))
             latent_std_cond = list(np.std(latent_cond, axis=0))
@@ -641,7 +648,8 @@ class ModelEvaluator:
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
                     # transform latent_all
-                    latent_subset = pca.transform(latent_subset)
+                    with threadpool_limits(limits=1): # faster on linux
+                        latent_subset = pca.transform(latent_subset)
                     # Mean and std on first dimension
                     latent_mean_by_label.append(list(np.mean(latent_subset, axis=0)))
                     latent_std_by_label.append(list(np.std(latent_subset, axis=0)))

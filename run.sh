@@ -61,7 +61,7 @@ for fold in $(seq 0 $(($k_folds - 1))); do
 
     # Change back to the root directory
     cd ..
-    sleep 3
+    sleep 2
 
 done
 
