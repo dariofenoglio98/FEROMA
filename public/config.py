@@ -24,7 +24,7 @@ th_round = 0.06 # derivative threshold on accuracy trend for starting clustering
 
 # DFUL settings
 distance_function = "cosine" # ['cosine', 'euclidean']
-n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction  
+n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
@@ -36,14 +36,15 @@ non_iid_type = 'Py'
 verbose = True
 count_labels = True
 plot_clients = False
+epoch_locker_num = 5
 args = {
     # 'rotation_bank': 4,
     # 'color_bank': 3,
     # 'mixing_num': 6,
     'py_bank':6,
     'classes_per_set':3,
-    'DA_dataset_scaling': 3.0,
-    'DA_epoch_locker_num': 5,
+    'DA_dataset_scaling': epoch_locker_num*n_clients/80,
+    'DA_epoch_locker_num': epoch_locker_num,
     'DA_random_locker': False,
     'DA_max_dist': 6,
     'DA_continual_divergence': False
