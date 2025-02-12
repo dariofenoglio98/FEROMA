@@ -1,5 +1,5 @@
 # Overall settings
-k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
+k_folds = 2 # number of folds for cross-validation, if 1, no cross-validation
 strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
@@ -23,30 +23,39 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # DFUL settings
-distance_function = "cosine" # ['cosine', 'euclidean']
-n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
+distance_function = "euclidean" # ['cosine', 'euclidean']
+n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
 
 # Dynamic dataset
-drifting_type = 'trDR_teDR'
+drifting_type = 'trDR_teND'
 dataset_name = "MNIST"
-non_iid_type = 'Py'
 verbose = True
 count_labels = True
 plot_clients = False
-epoch_locker_num = 5
+non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
+epoch_locker_num = 5        # [3,5,7,10,20] TODO
+data_scaling = epoch_locker_num*n_clients/80
 args = {
     # 'rotation_bank': 4,
     # 'color_bank': 3,
+
+    # 'py_bank':6,
+    # 'classes_per_set':3,
+
     # 'mixing_num': 6,
-    'py_bank':6,
-    'classes_per_set':3,
-    'DA_dataset_scaling': epoch_locker_num*n_clients/80,
+
+    # 'rotation_bank': 4,
+    # 'color_bank': 3,
+    # 'pyx_pattern_bank_num': 3,
+    # 'targeted_class_number': 3,
+
+    'DA_dataset_scaling': data_scaling,
     'DA_epoch_locker_num': epoch_locker_num,
     'DA_random_locker': False,
-    'DA_max_dist': 6,
+    'DA_max_dist': 100,
     'DA_continual_divergence': False
 }
 
