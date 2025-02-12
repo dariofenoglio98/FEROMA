@@ -1,8 +1,10 @@
 data/
-checkpoints/
-images/
-results/
-histories/
+data/cur_datasets/
+data/MNIST/
+**/checkpoints/
+**/images/
+**/results/
+**/histories/
 ANDA/
 anda_plot/
 __pycache__/
