@@ -23,7 +23,7 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # DFUL settings
-distance_function = "cosine" # ['cosine', 'euclidean']
+distance_function = "euclidean" # ['cosine', 'euclidean']
 n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
@@ -35,7 +35,7 @@ dataset_name = "MNIST"
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Px_y'         # ['Px','Py','Px_y','Py_x'] TODO
+non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
 # epoch_locker_num = 5        # [3,5,7,10,20]
 # data_scaling = epoch_locker_num*n_clients/80
 # args = {
