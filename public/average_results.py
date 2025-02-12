@@ -2,7 +2,12 @@ import numpy as np
 import os
 import pandas as pd
 import config as cfg
+import argparse
 
+parser = argparse.ArgumentParser(description='Generate datasets for ANDA')
+parser.add_argument('--scaling', type=int, help='Scaling factor for the non iid type')
+parser.add_argument('--epoch_num', type=int, help='Number of data changes during the training')
+args = parser.parse_args()
 
 def calculate_mean_std_metrics(metrics):
     # Initialize a dictionary to hold the means of all keys
@@ -30,7 +35,6 @@ def calculate_mean_std_metrics(metrics):
         
     return mean_std_metrics
 
-
 # Load metrics from all folds
 metrics = []
 for i in range(cfg.k_folds):
@@ -50,6 +54,6 @@ result = calculate_mean_std_metrics(metrics)
 
 # Save the mean metrics to a file
 result_pd = pd.DataFrame(result)
-result_pd.to_excel(f'{cfg.strategy}/results/{cfg.default_path}/mean_std_test_metrics_{cfg.non_iid_type}_{cfg.args}.xlsx', index=False)
+result_pd.to_excel(f'{cfg.strategy}/results/{cfg.default_path}/mean_std_test_metrics_{cfg.non_iid_type}_Epoch_num_{args.epoch_num}_Scaling_{args.scaling}.xlsx', index=False)
 
 

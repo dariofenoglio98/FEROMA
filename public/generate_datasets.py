@@ -14,7 +14,112 @@ from ANDA import anda
 # Get arguments
 parser = argparse.ArgumentParser(description='Generate datasets for ANDA')
 parser.add_argument('--fold', type=int, default=0, help='Fold number of the cross-validation')
+parser.add_argument('--scaling', type=int, help='Scaling factor for the non iid type')
+parser.add_argument('--epoch_num', type=int, help='Number of data changes during the training')
 args = parser.parse_args()
+
+# Set current args
+data_scaling = max(1.0, args.epoch_num*cfg.n_clients/30)
+current_args = {
+    'DA_dataset_scaling': data_scaling,
+    'DA_epoch_locker_num': args.epoch_num,
+    'DA_random_locker': False,
+    'DA_max_dist': 100,
+    'DA_continual_divergence': False
+}
+if cfg.non_iid_type == 'Px':
+    if args.scaling == 0:
+        current_args['rotation_bank'] = 4
+        current_args['color_bank'] = 1
+
+    elif args.scaling == 1:
+        current_args['rotation_bank'] = 2
+        current_args['color_bank'] = 3
+    
+    elif args.scaling == 2:
+        current_args['rotation_bank'] = 4
+        current_args['color_bank'] = 3
+    else:
+        raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
+
+elif cfg.non_iid_type == 'Py':
+    if args.scaling == 0:
+        current_args['py_bank'] = 4
+        current_args['classes_per_set'] = 8
+    elif args.scaling == 1:
+        current_args['py_bank'] = 4
+        current_args['classes_per_set'] = 5
+    elif args.scaling == 2:
+        current_args['py_bank'] = 4
+        current_args['classes_per_set'] = 2
+    elif args.scaling == 3:
+        current_args['py_bank'] = 6
+        current_args['classes_per_set'] = 8
+    elif args.scaling == 4:
+        current_args['py_bank'] = 6
+        current_args['classes_per_set'] = 5
+    elif args.scaling == 5:
+        current_args['py_bank'] = 6
+        current_args['classes_per_set'] = 2
+    elif args.scaling == 6:
+        current_args['py_bank'] = 8
+        current_args['classes_per_set'] = 8
+    elif args.scaling == 7:
+        current_args['py_bank'] = 8
+        current_args['classes_per_set'] = 5
+    elif args.scaling == 8:
+        current_args['py_bank'] = 8
+        current_args['classes_per_set'] = 2
+    else:
+        raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
+
+elif cfg.non_iid_type == 'Py_x':
+    if args.scaling == 0:
+        current_args['mixing_num'] = 3
+    elif args.scaling == 1:
+        current_args['mixing_num'] = 4
+    elif args.scaling == 2:
+        current_args['mixing_num'] = 5
+    else:
+        raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
+
+elif cfg.non_iid_type == 'Px_y':
+    current_args['rotation_bank'] = 4
+    current_args['color_bank'] = 3
+    if args.scaling == 0:
+        current_args['pyx_pattern_bank_num'] = 4
+        current_args['targeted_class_number'] = 2
+    elif args.scaling == 1:
+        current_args['pyx_pattern_bank_num'] = 4
+        current_args['targeted_class_number'] = 5
+    elif args.scaling == 2:
+        current_args['pyx_pattern_bank_num'] = 4
+        current_args['targeted_class_number'] = 8
+    elif args.scaling == 3:
+        current_args['pyx_pattern_bank_num'] = 6
+        current_args['targeted_class_number'] = 2
+    elif args.scaling == 4:
+        current_args['pyx_pattern_bank_num'] = 6
+        current_args['targeted_class_number'] = 5
+    elif args.scaling == 5:
+        current_args['pyx_pattern_bank_num'] = 6
+        current_args['targeted_class_number'] = 8
+    elif args.scaling == 6:
+        current_args['pyx_pattern_bank_num'] = 8
+        current_args['targeted_class_number'] = 2
+    elif args.scaling == 7:
+        current_args['pyx_pattern_bank_num'] = 8
+        current_args['targeted_class_number'] = 5
+    elif args.scaling == 8:
+        current_args['pyx_pattern_bank_num'] = 8
+        current_args['targeted_class_number'] = 8
+
+    else:
+        raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
+
+else:
+    raise ValueError("Non-IID type not found! Please check the ANDA page for more details.")
+
 
 # valid dataset names
 assert cfg.dataset_name in ['CIFAR10', 'CIFAR100', 'MNIST', 'FMNIST', 'EMNIST'], \
@@ -66,7 +171,7 @@ elif cfg.drifting_type in ['trND_teDR','trDA_teDR','trDA_teND','trDR_teDR','trDR
         count_labels=cfg.count_labels,
         plot_clients=cfg.plot_clients,
         random_seed = cfg.random_seed + args.fold,
-        **cfg.args
+        **current_args
     )
 else:
     raise ValueError("Drifting type not found! Please check the ANDA page for more details.")

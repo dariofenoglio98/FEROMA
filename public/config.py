@@ -23,7 +23,7 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # DFUL settings
-distance_function = "euclidean" # ['cosine', 'euclidean']
+distance_function = "cosine" # ['cosine', 'euclidean']
 n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
@@ -35,29 +35,29 @@ dataset_name = "MNIST"
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
-epoch_locker_num = 5        # [3,5,7,10,20] TODO
-data_scaling = epoch_locker_num*n_clients/80
-args = {
-    # 'rotation_bank': 4,
-    # 'color_bank': 3,
+non_iid_type = 'Px_y'         # ['Px','Py','Px_y','Py_x'] TODO
+# epoch_locker_num = 5        # [3,5,7,10,20]
+# data_scaling = epoch_locker_num*n_clients/80
+# args = {
+#     # 'rotation_bank': 4,
+#     # 'color_bank': 3,
 
-    # 'py_bank':6,
-    # 'classes_per_set':3,
+#     # 'py_bank':6,
+#     # 'classes_per_set':3,
 
-    # 'mixing_num': 6,
+#     # 'mixing_num': 6,
 
-    # 'rotation_bank': 4,
-    # 'color_bank': 3,
-    # 'pyx_pattern_bank_num': 3,
-    # 'targeted_class_number': 3,
+#     # 'rotation_bank': 4,
+#     # 'color_bank': 3,
+#     # 'pyx_pattern_bank_num': 3,
+#     # 'targeted_class_number': 3,
 
-    'DA_dataset_scaling': data_scaling,
-    'DA_epoch_locker_num': epoch_locker_num,
-    'DA_random_locker': False,
-    'DA_max_dist': 100,
-    'DA_continual_divergence': False
-}
+#     'DA_dataset_scaling': data_scaling,
+#     'DA_epoch_locker_num': epoch_locker_num,
+#     'DA_random_locker': False,
+#     'DA_max_dist': 100,
+#     'DA_continual_divergence': False
+# }
 
 
 
