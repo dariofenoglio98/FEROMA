@@ -96,7 +96,7 @@ for epoch_num in 3 5 7 10 20; do
             # Averaging the results of all folds
             python public/average_results.py --epoch_num "$epoch_num" --scaling "$s"
             # Plot confidence interval plots
-            python public/plots_across_folds.py --dataset "$dataset_name"
+            # python public/plots_across_folds.py --dataset "$dataset_name"
         fi
 
         done
