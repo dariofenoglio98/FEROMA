@@ -3,7 +3,7 @@ k_folds = 2 # number of folds for cross-validation, if 1, no cross-validation
 strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
-n_clients = 10
+n_clients = 20
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
@@ -36,14 +36,14 @@ dataset_name = "MNIST"
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Py_x'         # ['Px','Py','Px_y','Py_x'] TODO
+non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
 
 # Training model settings
 model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
 batch_size = 64
 test_batch_size = 64
 client_eval_ratio = 0.2
-n_rounds = 10
+n_rounds = 20
 local_epochs = 2
 lr = 0.005
 momentum = 0.9

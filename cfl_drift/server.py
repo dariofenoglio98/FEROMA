@@ -793,7 +793,6 @@ def main() -> None:
         
         # Create test dataset and loader
         test_dataset = models.CombinedDataset(test_x, test_y, transform=None)
-        print(f"\033[93mClient {client_id} - Test dataset size: {len(test_dataset)}\033[0m")
         test_loader = DataLoader(test_dataset, batch_size=cfg.test_batch_size, shuffle=False)
     
         # --- Test-time inference: check closest cluster ---
@@ -885,7 +884,8 @@ def main() -> None:
 
     # print average loss and accuracy
     print(f"\n\033[93mAverage Loss: {np.mean(losses):.3f}, Average Accuracy: {np.mean(accuracies)*100:.2f}\033[0m")
-    print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
+    if cfg.non_iid_type == "Py_x":
+        print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")
     
     # Save metrics as numpy array
