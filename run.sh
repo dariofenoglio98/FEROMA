@@ -36,7 +36,7 @@ fi
 
 
 # For loop across epoch_num [3, 5, 7, 10 20]
-for epoch_num in 3 5 7 10 20; do
+for epoch_num in 5 10 20; do
     echo -e "\n\033[1;36mStarting experiment with epoch_num: $epoch_num\033[0m\n"
 
     # For loop across scaling options

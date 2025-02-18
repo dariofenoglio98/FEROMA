@@ -3,7 +3,7 @@ k_folds = 2 # number of folds for cross-validation, if 1, no cross-validation
 strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
-n_clients = 20
+n_clients = 50
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
@@ -35,73 +35,7 @@ dataset_name = "MNIST"
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
-# epoch_locker_num = 5        # [3,5,7,10,20]
-# data_scaling = epoch_locker_num*n_clients/80
-# args = {
-#     # 'rotation_bank': 4,
-#     # 'color_bank': 3,
-
-#     # 'py_bank':6,
-#     # 'classes_per_set':3,
-
-#     # 'mixing_num': 6,
-
-#     # 'rotation_bank': 4,
-#     # 'color_bank': 3,
-#     # 'pyx_pattern_bank_num': 3,
-#     # 'targeted_class_number': 3,
-
-#     'DA_dataset_scaling': data_scaling,
-#     'DA_epoch_locker_num': epoch_locker_num,
-#     'DA_random_locker': False,
-#     'DA_max_dist': 100,
-#     'DA_continual_divergence': False
-# }
-
-
-
-# Dataset settings
-# dataset_name = "MNIST" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "EMNIST"]
-# drifting_type = 'static' # ['static', 'trND_teDR', 'trDA_teDR', 'trDA_teND', 'trDR_teDR', 'trDR_teND'] refer to ANDA page for more details
-# non_iid_type = 'feature_skew_strict' # ['feature_skew_strict', 'label_skew_strict', 'feature_condition_skew', 'label_condition_skew'] refer to ANDA page for more details
-# verbose = True
-# count_labels = True
-# plot_clients = False
-
-# # Careful with the args applying to your settings above
-# # # FEATURE DISTRIBUTION SHIFT P(X) - (feature_skew_strict) 
-# # args = {
-# #     'set_rotation': True,
-# #     'set_color': True,
-# #     'rotations':4,
-# #     'colors':3,
-# # }
-
-# # LABEL DISTRIBUTION SHIFT P(Y) - (label_skew_strict)
-# args = {
-#     'py_bank': 5,
-#     'client_n_class': 5,
-# }
-
-# # CONCEPT DRIFT P(Y|X) - (feature_condition_skew)
-# args = {
-#     'random_mode':True,
-#     'mixing_label_number':7, # was 3 for new_config
-#     'scaling_label_low':1.0,
-#     'scaling_label_high':1.0,
-# }
-
-# # CONCEPT DRIFT P(X|Y) - (label_condition_skew)
-# args = {
-#         'set_rotation': True,
-#         'set_color': True,
-#         'rotations':4,
-#         'colors':1,
-#         'random_mode':True,
-#         'rotated_label_number':1,
-#         'colored_label_number':1,
-# }
+non_iid_type = 'Py_x'         # ['Px','Py','Px_y','Py_x'] TODO
 
 # Training model settings
 model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
