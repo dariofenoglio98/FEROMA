@@ -825,29 +825,6 @@ def main() -> None:
         accuracies.append(accuracy_test)
         losses.append(loss_test)
 
-        # # Load respective cluster model with another distance
-        # test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
-        #                                 input_size=cfg.input_size).to(device)
-        # test_client_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{client_model_cid_old}_trained.pth", weights_only=False))
-        # loss_test, accuracy_test = models.simple_test(test_client_model, device, test_loader)
-        # print(f"\033[93mClient Euclidean {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid_old}\033[0m")        
-        
-        # --- Participating clients: assign known cluster ---
-        # client_cluster = cluster_labels_inference[client_id]
-
-        # # Load respective cluster model
-        # cluster_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
-        #                                 input_size=cfg.input_size).to(device)
-        # cluster_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cluster_{client_cluster}.pth", weights_only=False))
-        
-        # # Evaluate
-        # loss_test, accuracy_test = models.simple_test(cluster_model, device, test_loader)
-        # print(f"\033[93mClient (known) {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Closest centroid {client_cluster}\033[0m")
-        # accuracies_known.append(accuracy_test)
-        # losses_known.append(loss_test)
-
-
-
     # print average loss and accuracy
     print(f"\n\033[93mAverage Loss: {np.mean(losses):.3f}, Average Accuracy: {np.mean(accuracies)*100:.2f}\033[0m")
     # print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
