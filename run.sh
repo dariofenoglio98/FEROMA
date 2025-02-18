@@ -78,7 +78,7 @@ for epoch_num in 5 10 20; do
             # pkill -u mohan -f client.py
             # pkill -u mohanli -f client.py
             # pkill -u dario -f server.py
-            pkill -u dariofenoglio -f sever.py
+            pkill -u dariofenoglio -f server.py
             # pkill -u mohan -f server.py
             # pkill -u mohanli -f server.py
             pkill -u dariofenoglio -f python -9

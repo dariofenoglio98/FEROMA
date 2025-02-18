@@ -231,6 +231,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         self.aggregated_parameters_global = None
         self.fedavg = True # True: Fedavg training, False: personalized clustering # 0: not started, 1: to cluster, 2: done
         # self.starting_round = True
+        self.save_client_id_cid = True
         self.parent_client_descrs = None
         # ZZZ
         self.accuracy_trend = [] # accuracy trend for clustering
@@ -337,7 +338,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         else:
             if descriptor_extraction:
                 # Extract & scale client descriptors and self-assigned client ids, FLWR cids
-                client_descr, client_id_plot, client_cid_list  = [], [], []
+                # client_descr, client_id_plot, client_cid_list  = [], [], []
+                client_descr = []
+                client_id_cid = {}
                 for proxy, res in results:
                     if cfg.extended_descriptors:
                         if cfg.selected_descriptors == "Pxy":
@@ -423,8 +426,9 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                             client_descr.append(json.loads(res.metrics["latent_space_mean"]) + \
                                                 json.loads(res.metrics["latent_space_mean_by_label"]))                        
                             
-                    client_id_plot.append(res.metrics["cid"])
-                    client_cid_list.append(proxy.cid)
+                    # client_id_plot.append(res.metrics["cid"])
+                    # client_cid_list.append(proxy.cid)
+                    client_id_cid[res.metrics["cid"]] = proxy.cid
 
                 # scaling
                 client_descr = self.descriptors_scaler.scale(np.array(client_descr))
@@ -438,6 +442,10 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # save descriptors and cid list
                 # np.save(f'results/client_descr.npy', client_descr)
                 # np.save(f'results/client_id_plot.npy', client_id_plot)
+                if self.save_client_id_cid:
+                    self.save_client_id_cid = False
+                    with open(f'results/{self.path}/client_cid_list.pkl', 'wb') as f:
+                        pickle.dump(client_id_cid, f)
 
 
                 def cal_weights(
@@ -690,6 +698,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
 
 
 
+
 # Main
 def main() -> None:
     # Get arguments
@@ -757,7 +766,8 @@ def main() -> None:
     elif cfg.selected_descriptors == "Py":
         raise ValueError("You cannot use Py at inference, dummy guy! I will read cluster assignement during training for inference")
     elif cfg.selected_descriptors in ["Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short"]:
-        client_descriptors = {cid: descriptor[:cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor] for cid, descriptor in client_descriptors.items()}
+        if not cfg.non_iid_type == "Py_x":
+            client_descriptors = {cid: descriptor[:cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor] for cid, descriptor in client_descriptors.items()}
         # print(f"\033[93mCluster centroids: {client_descriptors}\033[0m\n") # only latent space
     else:
         raise ValueError("Invalid selected_descriptors")
@@ -783,6 +793,7 @@ def main() -> None:
         
         # Create test dataset and loader
         test_dataset = models.CombinedDataset(test_x, test_y, transform=None)
+        print(f"\033[93mClient {client_id} - Test dataset size: {len(test_dataset)}\033[0m")
         test_loader = DataLoader(test_dataset, batch_size=cfg.test_batch_size, shuffle=False)
     
         # --- Test-time inference: check closest cluster ---
@@ -792,16 +803,63 @@ def main() -> None:
         
         if cfg.selected_descriptors == "Pxy":
             descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
-            descriptors = descriptors[:, cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] # only latent space
+            descriptors = descriptors[:, cfg.n_metrics_descriptors*cfg.len_metric_descriptor:][0] # only latent space
         elif cfg.selected_descriptors == "Px":
             descriptors = descriptors[cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] # only latent space 
-            descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
+            descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))[0]
         elif cfg.selected_descriptors in ["Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short"]:
             descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
-            descriptors = descriptors[:, :cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor] # only latent space
+            descriptors = descriptors[:, :cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor][0] # only latent space
         else:
             raise ValueError("Invalid selected_descriptors")
-    
+        
+        # if Py_x condition few labels are needed
+        if cfg.non_iid_type == "Py_x":
+            # -- Real-Association with few labels
+            if cfg.n_test_sample_per_class == -1:
+                test_loader_label = test_loader
+            else: 
+                # sample n_test_sample_per_class from test dataset
+                unique_labels = np.unique(test_y)
+                sampled_indices = []
+                for lbl in unique_labels:
+                    indices = [i for i, yval in enumerate(test_y) if yval == lbl]
+                    if len(indices) > cfg.n_test_sample_per_class:
+                        sampled_idx = np.random.choice(indices, cfg.n_test_sample_per_class, replace=False)
+                    else:
+                        sampled_idx = indices
+                    sampled_indices.extend(sampled_idx)
+
+                sampled_test_x = [test_x[i] for i in sampled_indices]
+                sampled_test_y = [test_y[i] for i in sampled_indices]
+                sampled_test_dataset = models.CombinedDataset(sampled_test_x, sampled_test_y, transform=None)
+
+                # Create the new test data loader
+                test_loader_label = DataLoader(sampled_test_dataset, batch_size=cfg.n_test_sample_per_class, shuffle=False)
+
+            # Extract descriptors, scaling
+            descriptors_label = models.ModelEvaluator(test_loader=test_loader_label, device=device).extract_descriptors_inference(
+                                                        model=evaluation_model, max_latent_space=MAX_LATENT_SPACE)
+            descriptors_label = descriptors_scaler.scale(descriptors_label.reshape(1,-1))
+            # Combine second part of this descriptor to the Px one (comment this line to use only descriptors_label[0])
+            descriptors_label = descriptors_label[:, cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor:][0] # only latent space
+            # Concatenation (comment this line to use only descriptors_label[0])
+            descriptors = np.concatenate([descriptors, descriptors_label])
+            # using only this descriptors (uncomment this line to use only descriptors_label[0])
+            # descriptors = np.array(descriptors_label[0])
+            
+            ## -- Known-Association evaluation --
+            # load client id - cid reference
+            known_client_cid = np.load(f'results/{exp_path}/client_cid_list.pkl', allow_pickle=True)[client_id]
+            known_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+                                            input_size=cfg.input_size).to(device)
+            known_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{known_client_cid}_trained.pth", weights_only=False))
+            # Evaluate
+            loss_known, accuracy_known = models.simple_test(known_model, device, test_loader)
+            print(f"\033[93mKnown: Client {client_id} - Test Loss: {loss_known:.3f}, Test Accuracy: {accuracy_known*100:.2f} - Associciate model cid: {known_client_cid}\033[0m")
+            accuracies_known.append(accuracy_known)
+            losses_known.append(loss_known) 
+
         # Find the closest model to the client: TODO: use the right distance function
         # client_model_cid_old = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
         if cfg.distance_function == "euclidean":
@@ -810,7 +868,7 @@ def main() -> None:
             distance_fn = cosine
         else:
             raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
-        descriptors = np.array(descriptors[0])
+        # descriptors = np.array(descriptors[0])
         client_model_cid = min(client_descriptors, key=lambda cid: distance_fn(descriptors, client_descriptors[cid]))
         # print(f"\033[93mClient {client_id} - Old closest centroid: {client_model_cid_old}, New closest centroid: {client_model_cid}\033[0m")
 
@@ -827,7 +885,7 @@ def main() -> None:
 
     # print average loss and accuracy
     print(f"\n\033[93mAverage Loss: {np.mean(losses):.3f}, Average Accuracy: {np.mean(accuracies)*100:.2f}\033[0m")
-    # print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
+    print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")
     
     # Save metrics as numpy array
@@ -836,14 +894,11 @@ def main() -> None:
         "accuracy": accuracies,
         "average_loss": np.mean(losses),
         "average_accuracy": np.mean(accuracies),
-        # "loss_known": losses_known,
-        # "accuracy_known": accuracies_known,
-        # "average_loss_known": np.mean(losses_known),
-        # "average_accuracy_known": np.mean(accuracies_known),
         "time": round((time.time() - start_time)/60, 2),
-        # "identified_clusters": strategy.n_clusters,
-        # "real_clusters": strategy.real_n_clusters,
     }
+    if cfg.non_iid_type == "Py_x":
+        metrics["average_loss_known"] = np.mean(losses_known)
+        metrics["average_accuracy_known"] = np.mean(accuracies_known)
     np.save(f'results/{exp_path}/test_metrics_fold_{args.fold}.npy', metrics)
     
     time.sleep(1)
