@@ -20,19 +20,19 @@ echo -e "\n\033[1;36mExperiment settings:\033[0m\n\033[1;36m \
     \033[1;36mK-Folds: $k_folds\033[0m\n"
 
 # Check non-IID type ['Px','Py','Px_y','Py_x']
-if [ "$non_iid_type" == "Px" ]; then
-    tot_scaling=2
-elif [ "$non_iid_type" == "Py" ]; then
-    tot_scaling=8
-elif [ "$non_iid_type" == "Py_x" ]; then
-    tot_scaling=2
-elif [ "$non_iid_type" == "Px_y" ]; then
-    tot_scaling=8
-else
-    echo -e "\n\033[1;31mError: non-IID type not recognized\033[0m\n"
-    exit 1
-fi
-
+# if [ "$non_iid_type" == "Px" ]; then
+#     tot_scaling=2
+# elif [ "$non_iid_type" == "Py" ]; then
+#     tot_scaling=8
+# elif [ "$non_iid_type" == "Py_x" ]; then
+#     tot_scaling=2
+# elif [ "$non_iid_type" == "Px_y" ]; then
+#     tot_scaling=8
+# else
+#     echo -e "\n\033[1;31mError: non-IID type not recognized\033[0m\n"
+#     exit 1
+# fi
+tot_scaling=2
 
 
 # For loop across epoch_num [3, 5, 7, 10 20]

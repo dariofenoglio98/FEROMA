@@ -43,31 +43,40 @@ if cfg.non_iid_type == 'Px':
         raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
 
 elif cfg.non_iid_type == 'Py':
+    # if args.scaling == 0:
+    #     current_args['py_bank'] = 4
+    #     current_args['classes_per_set'] = 8
+    # elif args.scaling == 1:
+    #     current_args['py_bank'] = 4
+    #     current_args['classes_per_set'] = 5
+    # elif args.scaling == 2:
+    #     current_args['py_bank'] = 4
+    #     current_args['classes_per_set'] = 2
+    # elif args.scaling == 3:
+    #     current_args['py_bank'] = 6
+    #     current_args['classes_per_set'] = 8
+    # elif args.scaling == 4:
+    #     current_args['py_bank'] = 6
+    #     current_args['classes_per_set'] = 5
+    # elif args.scaling == 5:
+    #     current_args['py_bank'] = 6
+    #     current_args['classes_per_set'] = 2
+    # elif args.scaling == 6:
+    #     current_args['py_bank'] = 8
+    #     current_args['classes_per_set'] = 8
+    # elif args.scaling == 7:
+    #     current_args['py_bank'] = 8
+    #     current_args['classes_per_set'] = 5
+    # elif args.scaling == 8:
+    #     current_args['py_bank'] = 8
+    #     current_args['classes_per_set'] = 2
     if args.scaling == 0:
         current_args['py_bank'] = 4
-        current_args['classes_per_set'] = 8
+        current_args['classes_per_set'] = 2
     elif args.scaling == 1:
-        current_args['py_bank'] = 4
-        current_args['classes_per_set'] = 5
+        current_args['py_bank'] = 6
+        current_args['classes_per_set'] = 2
     elif args.scaling == 2:
-        current_args['py_bank'] = 4
-        current_args['classes_per_set'] = 2
-    elif args.scaling == 3:
-        current_args['py_bank'] = 6
-        current_args['classes_per_set'] = 8
-    elif args.scaling == 4:
-        current_args['py_bank'] = 6
-        current_args['classes_per_set'] = 5
-    elif args.scaling == 5:
-        current_args['py_bank'] = 6
-        current_args['classes_per_set'] = 2
-    elif args.scaling == 6:
-        current_args['py_bank'] = 8
-        current_args['classes_per_set'] = 8
-    elif args.scaling == 7:
-        current_args['py_bank'] = 8
-        current_args['classes_per_set'] = 5
-    elif args.scaling == 8:
         current_args['py_bank'] = 8
         current_args['classes_per_set'] = 2
     else:
@@ -86,37 +95,45 @@ elif cfg.non_iid_type == 'Py_x':
 elif cfg.non_iid_type == 'Px_y':
     current_args['rotation_bank'] = 4
     current_args['color_bank'] = 3
+    # if args.scaling == 0:
+    #     current_args['pyx_pattern_bank_num'] = 4
+    #     current_args['targeted_class_number'] = 2
+    # elif args.scaling == 1:
+    #     current_args['pyx_pattern_bank_num'] = 4
+    #     current_args['targeted_class_number'] = 5
+    # elif args.scaling == 2:
+    #     current_args['pyx_pattern_bank_num'] = 4
+    #     current_args['targeted_class_number'] = 8
+    # elif args.scaling == 3:
+    #     current_args['pyx_pattern_bank_num'] = 6
+    #     current_args['targeted_class_number'] = 2
+    # elif args.scaling == 4:
+    #     current_args['pyx_pattern_bank_num'] = 6
+    #     current_args['targeted_class_number'] = 5
+    # elif args.scaling == 5:
+    #     current_args['pyx_pattern_bank_num'] = 6
+    #     current_args['targeted_class_number'] = 8
+    # elif args.scaling == 6:
+    #     current_args['pyx_pattern_bank_num'] = 8
+    #     current_args['targeted_class_number'] = 2
+    # elif args.scaling == 7:
+    #     current_args['pyx_pattern_bank_num'] = 8
+    #     current_args['targeted_class_number'] = 5
+    # elif args.scaling == 8:
+    #     current_args['pyx_pattern_bank_num'] = 8
+    #     current_args['targeted_class_number'] = 8
     if args.scaling == 0:
         current_args['pyx_pattern_bank_num'] = 4
-        current_args['targeted_class_number'] = 2
+        current_args['targeted_class_number'] = 8
     elif args.scaling == 1:
-        current_args['pyx_pattern_bank_num'] = 4
-        current_args['targeted_class_number'] = 5
+        current_args['pyx_pattern_bank_num'] = 6
+        current_args['targeted_class_number'] = 8
     elif args.scaling == 2:
-        current_args['pyx_pattern_bank_num'] = 4
-        current_args['targeted_class_number'] = 8
-    elif args.scaling == 3:
-        current_args['pyx_pattern_bank_num'] = 6
-        current_args['targeted_class_number'] = 2
-    elif args.scaling == 4:
-        current_args['pyx_pattern_bank_num'] = 6
-        current_args['targeted_class_number'] = 5
-    elif args.scaling == 5:
-        current_args['pyx_pattern_bank_num'] = 6
-        current_args['targeted_class_number'] = 8
-    elif args.scaling == 6:
-        current_args['pyx_pattern_bank_num'] = 8
-        current_args['targeted_class_number'] = 2
-    elif args.scaling == 7:
-        current_args['pyx_pattern_bank_num'] = 8
-        current_args['targeted_class_number'] = 5
-    elif args.scaling == 8:
         current_args['pyx_pattern_bank_num'] = 8
         current_args['targeted_class_number'] = 8
-
     else:
         raise ValueError("Scaling factor not found! Please check the ANDA page for more details.")
-
+    
 else:
     raise ValueError("Non-IID type not found! Please check the ANDA page for more details.")
 
