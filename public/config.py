@@ -7,8 +7,8 @@ n_clients = 20
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
-differential_privacy_descriptors = False
-epsilon = 1.0
+differential_privacy_descriptors = True
+epsilon = 10.0
 # sensitivity = 1.0 # automatically calculated
 
 # Strategy cfl_oneshot

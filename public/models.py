@@ -344,7 +344,7 @@ class ModelEvaluator:
             
             range_j = global_max - global_min
             sensitivity = range_j / latent_all.shape[0]
-            print(f"Global min: {global_min}, Global max: {global_max}, Sensitivity: {sensitivity}")
+            print(f"DP - Global min: {global_min}, Global max: {global_max}, Sensitivity: {sensitivity}")
         
         # Mean and std on first dimension
         latent_mean = list(np.mean(latent_all, axis=0))

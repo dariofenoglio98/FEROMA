@@ -548,7 +548,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
         
                 # Aggregate each cluster
                 for n, (cid, w) in enumerate(zip(cur_round_cids, client_distances)):
-                    print(f"Aggregating cluster {cid}...")
+                    # print(f"Aggregating cluster {cid}...")
                     self.aggregated_client_parameters[cid] = ndarrays_to_parameters(weighted_aggregate(weights_results, w))
                     self.client_descriptors[cid] = client_descr[n]
             
@@ -600,7 +600,7 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                 # if last round, save the models and the respective descriptors (here i'm saving the just aggregated model)
                 if server_round == cfg.n_rounds:
                     for cid, params in trained_models.items():
-                        print(f"Saving round {server_round} trained_model_{cid}...")
+                        # print(f"Saving round {server_round} trained_model_{cid}...")
                         # Convert `Parameters` to `List[np.ndarray]`
                         aggregated_ndarrays: List[np.ndarray] = parameters_to_ndarrays(params)
                         # Convert `List[np.ndarray]` to PyTorch`state_dict`
