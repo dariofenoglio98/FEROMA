@@ -99,10 +99,8 @@ for epoch_num in 5 10 20; do
             # python public/plots_across_folds.py --dataset "$dataset_name"
         fi
 
-        done
-    
     done
-
+    
 done
 
 

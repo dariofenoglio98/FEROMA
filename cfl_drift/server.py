@@ -447,6 +447,14 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                     with open(f'results/{self.path}/client_cid_list.pkl', 'wb') as f:
                         pickle.dump(client_id_cid, f)
 
+                def emphasize_high_values(values, power=5):
+                    """Increase the weight of higher values and reduce the lower ones."""
+                    # check if numpy array otherwise convert
+                    if not isinstance(values, np.ndarray):
+                        values = np.array(values)
+                        
+                    adjusted = values ** power
+                    return adjusted / adjusted.sum()
 
                 def cal_weights(
                     parent_client_descrs: List[np.ndarray] = None,
@@ -487,7 +495,20 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                             weights.append(1.0 / (dist + 1e-8))
                         i+=1
                         weights = np.array(weights)
-                        normalized_weights = weights / weights.sum()
+                        # save the weights for the current client
+                        # np.save(f'results/{self.path}/weights_{i}.npy', weights)
+                        # if cfg.softmax:
+                        if False:
+                            weights = weights / weights.sum()
+                            normalized_weights = emphasize_high_values(weights, power=4)
+                        elif False:
+                            normalized_weights = weights / weights.sum()
+                            # set to zero if the value is lower than 0.005
+                            normalized_weights[normalized_weights < 0.04] = 0
+                            print(f"Normalized weights: {normalized_weights}")
+                            normalized_weights = normalized_weights / normalized_weights.sum()
+                        else:
+                            normalized_weights = weights / weights.sum()
                         weight_matrix.append(normalized_weights)
 
                     return weight_matrix   
