@@ -518,11 +518,15 @@ class SaveModelStrategy(fl.server.strategy.FedAvg):
                     cur_client_descrs=client_descr,
                     dis_func=cfg.distance_function
                 )
-                # print(f"\033[91m\nRound {server_round} - Client descriptors: {client_descr}\n\033[0m")
-                # print(f"\033[91m\nRound {server_round} - Client descriptors previous: {self.parent_client_descrs}\n\033[0m")
-
-
+                # update parent client descriptors
                 self.parent_client_descrs = client_descr
+
+                # save the weights for visualization
+                if cfg.distance_visualization:
+                    client_distances_matrix = np.array(client_distances)
+                    np.save(f'results/{self.path}/client_distances_matrix_round_{server_round}.npy', client_distances_matrix)
+                    with open(f'results/{self.path}/client_cid_list_round_{server_round}.pkl', 'wb') as f:
+                        pickle.dump(client_id_cid, f)
 
                 # client_distances = [np.ones(cfg.n_clients) for _ in range(cfg.n_clients)]
                 print(f"\033[91mRound {server_round} - Client distances: {client_distances}\033[0m")
@@ -806,10 +810,14 @@ def main() -> None:
         test_x, test_y = [], []
         if not cfg.training_drifting:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
+            cur_data['test_features'] = torch.tensor(cur_data['test_features'], dtype=torch.float32)
+            cur_data['test_labels'] = torch.tensor(cur_data['test_labels'], dtype=torch.int64)
             test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
             test_y = cur_data['test_labels']
         else:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
+            cur_data['features'] = torch.tensor(cur_data['features'], dtype=torch.float32)
+            cur_data['labels'] = torch.tensor(cur_data['labels'], dtype=torch.int64)
             test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
             test_y = cur_data['labels']
         

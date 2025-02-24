@@ -208,6 +208,7 @@ if not cfg.training_drifting:
 # complex format as training drifting
 else:
     drifting_log = {}
+    client_distribution = {}
     for dataset in anda_dataset:
         client_number = dataset['client_number']
         cur_drifting_round = int(cfg.n_rounds * dataset['epoch_locker_indicator']) if dataset['epoch_locker_indicator'] != -1 else -1
@@ -216,6 +217,9 @@ else:
         filename = f'./data/cur_datasets/client_{client_number}_round_{cur_drifting_round}.npy'
         np.save(filename, dataset)
         print(f"Data for client {client_number} round {cur_drifting_round} saved")
+        
+        # save client distribution during training
+        client_distribution[client_number] = dataset['train_dist']
 
         # log drifting round info
         if client_number not in drifting_log:
@@ -226,6 +230,7 @@ else:
 
     # save log file
     np.save(f'./data/cur_datasets/drifting_log.npy', drifting_log)
+    np.save(f'./data/cur_datasets/client_distribution.npy', client_distribution)
 
 print("Datasets saved successfully!")
 

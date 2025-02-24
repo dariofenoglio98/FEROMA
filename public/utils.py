@@ -144,7 +144,7 @@ def get_in_channels():
             break
     cur_features = cur_data['train_features'] if not cfg.training_drifting else cur_data['features']
 
-    return 3 if len(cur_features.size()) == 4 else 1
+    return 3 if len(cur_features.shape) == 4 else 1
 
 def set_seed(seed):
     # Set seed for torch

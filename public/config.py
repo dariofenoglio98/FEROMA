@@ -29,6 +29,7 @@ extended_descriptors = True #mean and std
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
 n_test_sample_per_class = 20
+distance_visualization = True
 
 # Dynamic dataset
 drifting_type = 'trDR_teND'

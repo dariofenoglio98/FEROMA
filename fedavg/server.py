@@ -194,10 +194,14 @@ def main() -> None:
         test_x, test_y = [], []
         if not cfg.training_drifting:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
+            cur_data['test_features'] = torch.tensor(cur_data['test_features'], dtype=torch.float32)
+            cur_data['test_labels'] = torch.tensor(cur_data['test_labels'], dtype=torch.int64)
             test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
             test_y = cur_data['test_labels']
         else:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
+            cur_data['features'] = torch.tensor(cur_data['features'], dtype=torch.float32)
+            cur_data['labels'] = torch.tensor(cur_data['labels'], dtype=torch.int64)
             test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
             test_y = cur_data['labels']
         
