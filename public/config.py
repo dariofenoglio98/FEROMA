@@ -24,7 +24,7 @@ th_round = 0.06 # derivative threshold on accuracy trend for starting clustering
 
 # DFUL settings
 distance_function = "cosine" # ['cosine', 'euclidean']
-n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
+n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
