@@ -1,5 +1,5 @@
 # Overall settings
-k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
+k_folds = 5 # number of folds for cross-validation, if 1, no cross-validation
 strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
@@ -7,7 +7,7 @@ n_clients = 20
 n_samples_clients = -1 # if -1, use all samples
 
 # differential privacy on the descriptors
-differential_privacy_descriptors = True
+differential_privacy_descriptors = False
 epsilon = 10.0
 # sensitivity = 1.0 # automatically calculated
 
@@ -23,8 +23,8 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # DFUL settings
-distance_function = "cosine" # ['cosine', 'euclidean']
-n_stochastic_sampling = 1 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
+distance_function = "euclidean" # ['cosine', 'euclidean']
+n_stochastic_sampling = 2 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
