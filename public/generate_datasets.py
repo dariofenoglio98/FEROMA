@@ -20,6 +20,7 @@ args = parser.parse_args()
 
 # Set current args
 data_scaling = max(1.0, args.epoch_num*cfg.n_clients/30)
+print(f"Data scaling factor: {data_scaling}")
 current_args = {
     'DA_dataset_scaling': data_scaling,
     'DA_epoch_locker_num': args.epoch_num,
@@ -212,6 +213,11 @@ else:
     for dataset in anda_dataset:
         client_number = dataset['client_number']
         cur_drifting_round = int(cfg.n_rounds * dataset['epoch_locker_indicator']) if dataset['epoch_locker_indicator'] != -1 else -1
+        
+        # if cur_drifting_round == -1:
+        #     print(f"Client {client_number} - Shape test {dataset['features'].shape[0]}")
+        # else:
+        #     print(f"Client {client_number} - Shape train {dataset['features'].shape[0]*cfg.client_eval_ratio} - Shape val {dataset['features'].shape[0]*(1-cfg.client_eval_ratio)} - Round {cur_drifting_round}")
 
         # save data file      
         filename = f'./data/cur_datasets/client_{client_number}_round_{cur_drifting_round}.npy'
