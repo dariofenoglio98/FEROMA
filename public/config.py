@@ -1,6 +1,6 @@
 # Overall settings
-k_folds = 1 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
+k_folds = 5 # number of folds for cross-validation, if 1, no cross-validation
+strategy = 'fedavg' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 20
@@ -23,7 +23,7 @@ eps_scaling = 1.0 # for clustering method 4
 th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
 
 # DFUL settings
-distance_function = "cosine" # ['cosine', 'euclidean']
+distance_function = "euclidean" # ['cosine', 'euclidean']
 n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
@@ -37,7 +37,7 @@ dataset_name = "MNIST"
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
+non_iid_type = 'Py'         # ['Px','Py','Px_y','Py_x'] TODO
 
 # Training model settings
 model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
@@ -77,7 +77,7 @@ training_drifting = False if drifting_type in ['static', 'trND_teDR'] else True 
 default_path = f"{random_seed}/{model_name}/{dataset_name}/{drifting_type}"
 
 # FL settings - Communications
-port = '8018'
+port = '8008'
 ip = '0.0.0.0' # Local Host=0.0.0.0, or IP address of the server
 
 # Advance One-shot settings

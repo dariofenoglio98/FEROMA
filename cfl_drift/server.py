@@ -919,117 +919,117 @@ def main() -> None:
   
   
   
-    # ---- temp with different distance function ----
-    # Evaluate the model on the client datasets  
-    print(f"\n\033[94mCosine Distance \033[0m")  
-    losses_cosine, accuracies_cosine = [], []
-    losses_known_cosine, accuracies_known_cosine = [], []
-    for client_id in range(cfg.n_clients):
-        test_x, test_y = [], []
-        if not cfg.training_drifting:
-            cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
-            test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
-            test_y = cur_data['test_labels']
-        else:
-            cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
-            test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
-            test_y = cur_data['labels']
+    # # ---- temp with different distance function ----
+    # # Evaluate the model on the client datasets  
+    # print(f"\n\033[94mCosine Distance \033[0m")  
+    # losses_cosine, accuracies_cosine = [], []
+    # losses_known_cosine, accuracies_known_cosine = [], []
+    # for client_id in range(cfg.n_clients):
+    #     test_x, test_y = [], []
+    #     if not cfg.training_drifting:
+    #         cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
+    #         test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+    #         test_y = cur_data['test_labels']
+    #     else:
+    #         cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
+    #         test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+    #         test_y = cur_data['labels']
         
-        # Create test dataset and loader
-        test_dataset = models.CombinedDataset(test_x, test_y, transform=None)
-        test_loader = DataLoader(test_dataset, batch_size=cfg.test_batch_size, shuffle=False)
+    #     # Create test dataset and loader
+    #     test_dataset = models.CombinedDataset(test_x, test_y, transform=None)
+    #     test_loader = DataLoader(test_dataset, batch_size=cfg.test_batch_size, shuffle=False)
     
-        # --- Test-time inference: check closest cluster ---
-        # Extract descriptors, scaling
-        descriptors = models.ModelEvaluator(test_loader=test_loader, device=device).extract_descriptors_inference(
-                                                    model=evaluation_model, max_latent_space=MAX_LATENT_SPACE)
+    #     # --- Test-time inference: check closest cluster ---
+    #     # Extract descriptors, scaling
+    #     descriptors = models.ModelEvaluator(test_loader=test_loader, device=device).extract_descriptors_inference(
+    #                                                 model=evaluation_model, max_latent_space=MAX_LATENT_SPACE)
         
-        if cfg.selected_descriptors == "Pxy":
-            descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
-            descriptors = descriptors[:, cfg.n_metrics_descriptors*cfg.len_metric_descriptor:][0] # only latent space
-        elif cfg.selected_descriptors == "Px":
-            descriptors = descriptors[cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] # only latent space 
-            descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))[0]
-        elif cfg.selected_descriptors in ["Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short"]:
-            descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
-            descriptors = descriptors[:, :cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor][0] # only latent space
-        else:
-            raise ValueError("Invalid selected_descriptors")
+    #     if cfg.selected_descriptors == "Pxy":
+    #         descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
+    #         descriptors = descriptors[:, cfg.n_metrics_descriptors*cfg.len_metric_descriptor:][0] # only latent space
+    #     elif cfg.selected_descriptors == "Px":
+    #         descriptors = descriptors[cfg.n_metrics_descriptors*cfg.len_metric_descriptor:] # only latent space 
+    #         descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))[0]
+    #     elif cfg.selected_descriptors in ["Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short"]:
+    #         descriptors = descriptors_scaler.scale(descriptors.reshape(1,-1))
+    #         descriptors = descriptors[:, :cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor][0] # only latent space
+    #     else:
+    #         raise ValueError("Invalid selected_descriptors")
         
-        # if Py_x condition few labels are needed
-        if cfg.non_iid_type == "Py_x":
-            # -- Real-Association with few labels
-            if cfg.n_test_sample_per_class == -1:
-                test_loader_label = test_loader
-            else: 
-                # sample n_test_sample_per_class from test dataset
-                unique_labels = np.unique(test_y)
-                sampled_indices = []
-                for lbl in unique_labels:
-                    indices = [i for i, yval in enumerate(test_y) if yval == lbl]
-                    if len(indices) > cfg.n_test_sample_per_class:
-                        sampled_idx = np.random.choice(indices, cfg.n_test_sample_per_class, replace=False)
-                    else:
-                        sampled_idx = indices
-                    sampled_indices.extend(sampled_idx)
+    #     # if Py_x condition few labels are needed
+    #     if cfg.non_iid_type == "Py_x":
+    #         # -- Real-Association with few labels
+    #         if cfg.n_test_sample_per_class == -1:
+    #             test_loader_label = test_loader
+    #         else: 
+    #             # sample n_test_sample_per_class from test dataset
+    #             unique_labels = np.unique(test_y)
+    #             sampled_indices = []
+    #             for lbl in unique_labels:
+    #                 indices = [i for i, yval in enumerate(test_y) if yval == lbl]
+    #                 if len(indices) > cfg.n_test_sample_per_class:
+    #                     sampled_idx = np.random.choice(indices, cfg.n_test_sample_per_class, replace=False)
+    #                 else:
+    #                     sampled_idx = indices
+    #                 sampled_indices.extend(sampled_idx)
 
-                sampled_test_x = [test_x[i] for i in sampled_indices]
-                sampled_test_y = [test_y[i] for i in sampled_indices]
-                sampled_test_dataset = models.CombinedDataset(sampled_test_x, sampled_test_y, transform=None)
+    #             sampled_test_x = [test_x[i] for i in sampled_indices]
+    #             sampled_test_y = [test_y[i] for i in sampled_indices]
+    #             sampled_test_dataset = models.CombinedDataset(sampled_test_x, sampled_test_y, transform=None)
 
-                # Create the new test data loader
-                test_loader_label = DataLoader(sampled_test_dataset, batch_size=cfg.n_test_sample_per_class, shuffle=False)
+    #             # Create the new test data loader
+    #             test_loader_label = DataLoader(sampled_test_dataset, batch_size=cfg.n_test_sample_per_class, shuffle=False)
 
-            # Extract descriptors, scaling
-            descriptors_label = models.ModelEvaluator(test_loader=test_loader_label, device=device).extract_descriptors_inference(
-                                                        model=evaluation_model, max_latent_space=MAX_LATENT_SPACE)
-            descriptors_label = descriptors_scaler.scale(descriptors_label.reshape(1,-1))
-            # Combine second part of this descriptor to the Px one (comment this line to use only descriptors_label[0])
-            descriptors_label = descriptors_label[:, cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor:][0] # only latent space
-            # Concatenation (comment this line to use only descriptors_label[0])
-            descriptors = np.concatenate([descriptors, descriptors_label])
-            # using only this descriptors (uncomment this line to use only descriptors_label[0])
-            # descriptors = np.array(descriptors_label[0])
+    #         # Extract descriptors, scaling
+    #         descriptors_label = models.ModelEvaluator(test_loader=test_loader_label, device=device).extract_descriptors_inference(
+    #                                                     model=evaluation_model, max_latent_space=MAX_LATENT_SPACE)
+    #         descriptors_label = descriptors_scaler.scale(descriptors_label.reshape(1,-1))
+    #         # Combine second part of this descriptor to the Px one (comment this line to use only descriptors_label[0])
+    #         descriptors_label = descriptors_label[:, cfg.n_latent_space_descriptors*cfg.len_latent_space_descriptor:][0] # only latent space
+    #         # Concatenation (comment this line to use only descriptors_label[0])
+    #         descriptors = np.concatenate([descriptors, descriptors_label])
+    #         # using only this descriptors (uncomment this line to use only descriptors_label[0])
+    #         # descriptors = np.array(descriptors_label[0])
             
-            ## -- Known-Association evaluation --
-            # load client id - cid reference
-            known_client_cid = np.load(f'results/{exp_path}/client_cid_list.pkl', allow_pickle=True)[client_id]
-            known_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
-                                            input_size=cfg.input_size).to(device)
-            known_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{known_client_cid}_trained.pth", weights_only=False))
-            # Evaluate
-            loss_known, accuracy_known = models.simple_test(known_model, device, test_loader)
-            print(f"\033[93mKnown: Client {client_id} - Test Loss: {loss_known:.3f}, Test Accuracy: {accuracy_known*100:.2f} - Associciate model cid: {known_client_cid}\033[0m")
-            accuracies_known_cosine.append(accuracy_known)
-            losses_known_cosine.append(loss_known) 
+    #         ## -- Known-Association evaluation --
+    #         # load client id - cid reference
+    #         known_client_cid = np.load(f'results/{exp_path}/client_cid_list.pkl', allow_pickle=True)[client_id]
+    #         known_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+    #                                         input_size=cfg.input_size).to(device)
+    #         known_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{known_client_cid}_trained.pth", weights_only=False))
+    #         # Evaluate
+    #         loss_known, accuracy_known = models.simple_test(known_model, device, test_loader)
+    #         print(f"\033[93mKnown: Client {client_id} - Test Loss: {loss_known:.3f}, Test Accuracy: {accuracy_known*100:.2f} - Associciate model cid: {known_client_cid}\033[0m")
+    #         accuracies_known_cosine.append(accuracy_known)
+    #         losses_known_cosine.append(loss_known) 
 
-        # Find the closest model to the client: TODO: use the right distance function
-        # client_model_cid_old = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
-        if cfg.distance_function == "euclidean":
-            distance_fn = euclidean
-        elif cfg.distance_function == "cosine":
-            distance_fn = cosine
-        else:
-            raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
-        # descriptors = np.array(descriptors[0])
-        client_model_cid = min(client_descriptors, key=lambda cid: cosine(descriptors, client_descriptors[cid]))
-        # print(f"\033[93mClient {client_id} - Old closest centroid: {client_model_cid_old}, New closest centroid: {client_model_cid}\033[0m")
+    #     # Find the closest model to the client: TODO: use the right distance function
+    #     # client_model_cid_old = min(client_descriptors, key=lambda cid: np.linalg.norm(descriptors - client_descriptors[cid]))
+    #     if cfg.distance_function == "euclidean":
+    #         distance_fn = euclidean
+    #     elif cfg.distance_function == "cosine":
+    #         distance_fn = cosine
+    #     else:
+    #         raise ValueError("dis_func must be 'euclidean' or 'cosine'.")
+    #     # descriptors = np.array(descriptors[0])
+    #     client_model_cid = min(client_descriptors, key=lambda cid: cosine(descriptors, client_descriptors[cid]))
+    #     # print(f"\033[93mClient {client_id} - Old closest centroid: {client_model_cid_old}, New closest centroid: {client_model_cid}\033[0m")
 
-        # Load respective cluster model
-        test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
-                                        input_size=cfg.input_size).to(device)
-        test_client_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{client_model_cid}_trained.pth", weights_only=False))
+    #     # Load respective cluster model
+    #     test_client_model = models.models[cfg.model_name](in_channels=in_channels, num_classes=cfg.n_classes, \
+    #                                     input_size=cfg.input_size).to(device)
+    #     test_client_model.load_state_dict(torch.load(f"checkpoints/{exp_path}/{cfg.non_iid_type}_n_clients_{cfg.n_clients}_cid_{client_model_cid}_trained.pth", weights_only=False))
 
-        # Evaluate
-        loss_test, accuracy_test = models.simple_test(test_client_model, device, test_loader)
-        print(f"\033[93mClient {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid}\033[0m")
-        accuracies_cosine.append(accuracy_test)
-        losses_cosine.append(loss_test)
+    #     # Evaluate
+    #     loss_test, accuracy_test = models.simple_test(test_client_model, device, test_loader)
+    #     print(f"\033[93mClient {client_id} - Test Loss: {loss_test:.3f}, Test Accuracy: {accuracy_test*100:.2f} - Associciate model cid: {client_model_cid}\033[0m")
+    #     accuracies_cosine.append(accuracy_test)
+    #     losses_cosine.append(loss_test)
 
-    # print average loss and accuracy
-    print(f"\n\033[93mAverage Loss: {np.mean(losses_cosine):.3f}, Average Accuracy: {np.mean(accuracies_cosine)*100:.2f}\033[0m")
-    print(f"\033[93mAverage Loss (known): {np.mean(losses_known_cosine):.3f}, Average Accuracy (known): {np.mean(accuracies_known_cosine)*100:.2f}\033[0m")
-    print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")  
+    # # print average loss and accuracy
+    # print(f"\n\033[93mAverage Loss: {np.mean(losses_cosine):.3f}, Average Accuracy: {np.mean(accuracies_cosine)*100:.2f}\033[0m")
+    # print(f"\033[93mAverage Loss (known): {np.mean(losses_known_cosine):.3f}, Average Accuracy (known): {np.mean(accuracies_known_cosine)*100:.2f}\033[0m")
+    # print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")  
   
     # Save metrics as numpy array
     metrics = {
@@ -1037,18 +1037,18 @@ def main() -> None:
         "accuracy": accuracies,
         "average_loss": np.mean(losses),
         "average_accuracy": np.mean(accuracies),
-        "average_loss_cosine": np.mean(losses_cosine),
-        "average_accuracy_cosine": np.mean(accuracies_cosine),
+        # "average_loss_cosine": np.mean(losses_cosine),
+        # "average_accuracy_cosine": np.mean(accuracies_cosine),
         "time": round((time.time() - start_time)/60, 2),
     }
     if cfg.non_iid_type == "Py_x":
         metrics["average_loss_known"] = np.mean(losses_known)
         metrics["average_accuracy_known"] = np.mean(accuracies_known)
-        metrics["average_loss_known_cosine"] = np.mean(losses_known_cosine)
-        metrics["average_accuracy_known_cosine"] = np.mean(accuracies_known_cosine)
+        # metrics["average_loss_known_cosine"] = np.mean(losses_known_cosine)
+        # metrics["average_accuracy_known_cosine"] = np.mean(accuracies_known_cosine)
     np.save(f'results/{exp_path}/test_metrics_fold_{args.fold}.npy', metrics)
     
-    time.sleep(1)
+    # time.sleep(1)
     
 if __name__ == "__main__":
     main()

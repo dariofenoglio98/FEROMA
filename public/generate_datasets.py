@@ -216,8 +216,10 @@ else:
         # save data file      
         filename = f'./data/cur_datasets/client_{client_number}_round_{cur_drifting_round}.npy'
         np.save(filename, dataset)
-        print(f"Data for client {client_number} round {cur_drifting_round} saved")
+        # print(f"Data for client {client_number} round {cur_drifting_round} saved")
         
+        # if cur_drifting_round == -1:
+            # print(f"Dataset test size: {len(dataset['features'])}")
         # save client distribution during training
         client_distribution[client_number] = dataset['train_dist']
 
@@ -232,5 +234,5 @@ else:
     np.save(f'./data/cur_datasets/drifting_log.npy', drifting_log)
     np.save(f'./data/cur_datasets/client_distribution.npy', client_distribution)
 
-print("Datasets saved successfully!")
+# print("Datasets saved successfully!")
 

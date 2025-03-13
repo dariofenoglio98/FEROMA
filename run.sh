@@ -35,6 +35,91 @@ echo -e "\n\033[1;36mExperiment settings:\033[0m\n\033[1;36m \
 tot_scaling=2
 
 
+
+
+
+
+## For dful
+# # For loop across epoch_num [3, 5, 7, 10 20]
+# for epoch_num in 20; do
+#     echo -e "\n\033[1;36mStarting experiment with epoch_num: $epoch_num\033[0m\n"
+
+#     # For loop across scaling options
+#     for s in $(seq 2 $tot_scaling); do
+#         echo -e "\n\033[1;36mStarting experiment with scaling: $s and epoch_num: $epoch_num\033[0m\n"
+
+#         # K-Fold evaluation, if k_folds > 1
+#         for fold in $(seq 2 $(($k_folds - 1))); do        
+#             echo -e "\n\033[1;36mStarting fold $((fold + 1)) - (scaling $s and epoch_num $epoch_num)\033[0m\n"
+
+#             # Clean and create datasets
+#             rm -rf data/cur_datasets/* 
+#             python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
+
+#             # exit
+
+#             cd "$strategy"
+
+#             python server.py --fold "$fold" &
+#             # python dynamic_cluster_global_server.py &
+#             sleep 2  # Sleep for 2s to give the server enough time to start
+
+#             for i in $(seq 2 $(($n_clients - 1))); do
+#                 echo "Starting client ID $i"
+#                 # python client_dynamic.py --id "$i" &
+#                 python client.py --id "$i" --fold "$fold" &
+#             done
+
+#             # This will allow you to use CTRL+C to stop all background processes
+#             trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM
+#             # Wait for all background processes to complete
+#             wait
+
+#             # Clean up
+#             echo "Fold completed correctly"
+#             trap - SIGTERM 
+#             # pkill -u dario -f client.py
+#             pkill -u dariofenoglio -f client.py
+#             # pkill -u mohan -f client.py
+#             # pkill -u mohanli -f client.py
+#             # pkill -u dario -f server.py
+#             pkill -u dariofenoglio -f server.py
+#             # pkill -u mohan -f server.py
+#             # pkill -u mohanli -f server.py
+#             pkill -u dariofenoglio -f python -9
+
+#             # Change back to the root directory
+#             cd ..
+#             sleep 2
+#             # pkill -u dario -f client.py
+#             pkill -u dariofenoglio -f client.py
+#             # pkill -u mohan -f client.py
+#             # pkill -u mohanli -f client.py
+#             # pkill -u dario -f server.py
+#             pkill -u dariofenoglio -f server.py
+#             # pkill -u mohan -f server.py
+#             # pkill -u mohanli -f server.py
+#             pkill -u dariofenoglio -f python -9
+#             sleep 2
+#         done
+
+#         # K-Fold evaluation, if k_folds > 1
+#         if [ "$k_folds" -gt 1 ]; then
+
+#             echo -e "\n\033[1;36mAveraging the results of all folds\033[0m\n"
+#             # Averaging the results of all folds
+#             python public/average_results.py --epoch_num "$epoch_num" --scaling "$s"
+#             # Plot confidence interval plots
+#             # python public/plots_across_folds.py --dataset "$dataset_name"
+#         fi
+
+#     done
+    
+# done
+
+
+
+
 # For loop across epoch_num [3, 5, 7, 10 20]
 for epoch_num in 5 10 20; do
     echo -e "\n\033[1;36mStarting experiment with epoch_num: $epoch_num\033[0m\n"
@@ -59,7 +144,7 @@ for epoch_num in 5 10 20; do
             # python dynamic_cluster_global_server.py &
             sleep 2  # Sleep for 2s to give the server enough time to start
 
-            for i in $(seq 0 $(($n_clients - 1))); do
+            for i in $(seq 2 $(($n_clients - 1))); do
                 echo "Starting client ID $i"
                 # python client_dynamic.py --id "$i" &
                 python client.py --id "$i" --fold "$fold" &
@@ -86,7 +171,16 @@ for epoch_num in 5 10 20; do
             # Change back to the root directory
             cd ..
             sleep 2
-
+            # pkill -u dario -f client.py
+            pkill -u dariofenoglio -f client.py
+            # pkill -u mohan -f client.py
+            # pkill -u mohanli -f client.py
+            # pkill -u dario -f server.py
+            pkill -u dariofenoglio -f server.py
+            # pkill -u mohan -f server.py
+            # pkill -u mohanli -f server.py
+            pkill -u dariofenoglio -f python -9
+            sleep 2
         done
 
         # K-Fold evaluation, if k_folds > 1
@@ -102,6 +196,12 @@ for epoch_num in 5 10 20; do
     done
     
 done
+
+
+
+
+
+
 
 
 echo -e "\n\033[1;36mExperiment completed successfully\033[0m\n"

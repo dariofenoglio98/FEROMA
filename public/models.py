@@ -244,23 +244,23 @@ class ModelEvaluator:
         
         # Set model to evaluation mode
         model.eval()
-        num_classes = model.num_classes
+        # num_classes = model.num_classes
 
         # Initialize storage for metrics
-        precision_per_class = [0] * num_classes
-        recall_per_class = [0] * num_classes
-        f1_per_class = [0] * num_classes
-        accuracy_per_class = [0] * num_classes
-        loss_per_class = [0] * num_classes
-        loss_per_class_std = [0] * num_classes
-        class_counts = [0] * num_classes
+        # precision_per_class = [0] * num_classes
+        # recall_per_class = [0] * num_classes
+        # f1_per_class = [0] * num_classes
+        # accuracy_per_class = [0] * num_classes
+        # loss_per_class = [0] * num_classes
+        # loss_per_class_std = [0] * num_classes
+        # class_counts = [0] * num_classes
 
         y_true_all = []
         y_pred_all = []
         loss_all = []
         latent_all = []
         latent_mean = []
-        latent_cond = []
+        # latent_cond = []
         loss_trad = 0
         total_samples = 0
 
@@ -272,20 +272,20 @@ class ModelEvaluator:
                 # model output
                 output, latent_space = model(data, latent=True)
                 
-                # latent space condition
-                if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
-                    latent_space_cond = torch.zeros_like(latent_space)
-                    for i in range(len(target)):
-                        # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
-                        latent_space_cond[i] = latent_space[i] + latent_space[i] * cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
-                        # latent_space_cond[i] = latent_space[i] + cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
-                    latent_cond.extend(latent_space_cond.cpu().numpy())
+                # # latent space condition
+                # if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
+                #     latent_space_cond = torch.zeros_like(latent_space)
+                #     for i in range(len(target)):
+                #         # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
+                #         latent_space_cond[i] = latent_space[i] + latent_space[i] * cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
+                #         # latent_space_cond[i] = latent_space[i] + cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
+                #     latent_cond.extend(latent_space_cond.cpu().numpy())
                     
-                    # latent_cond.extend((latent_space + latent_space * 5 * torch.sin(target.unsqueeze(1) / (10000 ** (torch.arange(latent_space.size(1), device=latent_space.device).float() / latent_space.size(1)))).to(latent_space.device)).cpu().numpy())
+                    # # latent_cond.extend((latent_space + latent_space * 5 * torch.sin(target.unsqueeze(1) / (10000 ** (torch.arange(latent_space.size(1), device=latent_space.device).float() / latent_space.size(1)))).to(latent_space.device)).cpu().numpy())
 
-                # for i in range(len(target)):
-                #     # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
-                #     latent_space[i] = latent_space[i] + latent_space[i] * 5*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
+                # # for i in range(len(target)):
+                # #    # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
+                # #    latent_space[i] = latent_space[i] + latent_space[i] * 5*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)
                     
                 latent_all.extend(latent_space.cpu().numpy())
                     
@@ -316,7 +316,7 @@ class ModelEvaluator:
         # Weight the loss / metric 
         
         # Calculate traditional accuracy on the entire test set
-        accuracy_trad = accuracy_score(y_true_all, y_pred_all)
+        # accuracy_trad = accuracy_score(y_true_all, y_pred_all)
         
         # Average latent
         latent_all = np.array(latent_all)
@@ -350,55 +350,55 @@ class ModelEvaluator:
         latent_mean = list(np.mean(latent_all, axis=0))
         latent_std = list(np.std(latent_all, axis=0))
         
-        if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
-            latent_cond = np.array(latent_cond)
-            # transform latent_all
-            with threadpool_limits(limits=1): # faster on linux
-                latent_cond = pca.transform(latent_cond)
-            # Mean and std on first dimension
-            latent_mean_cond = list(np.mean(latent_cond, axis=0))
-            latent_std_cond = list(np.std(latent_cond, axis=0))
-        else:
-            latent_mean_cond = []
-            latent_std_cond = []
+        # if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
+        #     latent_cond = np.array(latent_cond)
+        #     # transform latent_all
+        #     with threadpool_limits(limits=1): # faster on linux
+        #         latent_cond = pca.transform(latent_cond)
+        #     # Mean and std on first dimension
+        #     latent_mean_cond = list(np.mean(latent_cond, axis=0))
+        #     latent_std_cond = list(np.std(latent_cond, axis=0))
+        # else:
+        #     latent_mean_cond = []
+        #     latent_std_cond = []
             
-        # Iterate through each class (for MNIST, classes are 0 to 9 by default)
-        for class_idx in range(num_classes):
-            # Get all predictions and ground truths for the current class
-            class_mask = (y_true_all == class_idx)  # Mask for this class
+        # # Iterate through each class (for MNIST, classes are 0 to 9 by default)
+        # for class_idx in range(num_classes):
+        #     # Get all predictions and ground truths for the current class
+        #     class_mask = (y_true_all == class_idx)  # Mask for this class
             
-            y_true_class = (y_true_all == class_idx).numpy().astype(int)  # Binary labels for the current class
-            y_pred_class = (y_pred_all == class_idx).numpy().astype(int)  # Binary predictions for the current class
+        #     y_true_class = (y_true_all == class_idx).numpy().astype(int)  # Binary labels for the current class
+        #     y_pred_class = (y_pred_all == class_idx).numpy().astype(int)  # Binary predictions for the current class
             
-            # Only calculate if there are samples for this class
-            if class_mask.sum() > 0:
-                # Compute precision, recall, and F1-score for this class
-                precision = precision_score(y_true_class, y_pred_class, zero_division=0)
-                recall = recall_score(y_true_class, y_pred_class, zero_division=0)
-                f1 = f1_score(y_true_class, y_pred_class, zero_division=0)
-                accuracy = accuracy_score(y_true_class, y_pred_class)
+        #     # Only calculate if there are samples for this class
+        #     if class_mask.sum() > 0:
+        #         # Compute precision, recall, and F1-score for this class
+        #         precision = precision_score(y_true_class, y_pred_class, zero_division=0)
+        #         recall = recall_score(y_true_class, y_pred_class, zero_division=0)
+        #         f1 = f1_score(y_true_class, y_pred_class, zero_division=0)
+        #         accuracy = accuracy_score(y_true_class, y_pred_class)
 
-                # Compute the loss for this class (average the loss of samples in this class)
-                class_loss = loss_all[class_mask].mean().item()
-                class_loss_std = loss_all[class_mask].std().item()
+        #         # Compute the loss for this class (average the loss of samples in this class)
+        #         class_loss = loss_all[class_mask].mean().item()
+        #         class_loss_std = loss_all[class_mask].std().item()
 
-                # Update class counts and metrics
-                precision_per_class[class_idx] = precision
-                recall_per_class[class_idx] = recall
-                f1_per_class[class_idx] = f1
-                accuracy_per_class[class_idx] = accuracy
-                loss_per_class[class_idx] = class_loss
-                loss_per_class_std[class_idx] = class_loss_std
-                class_counts[class_idx] = class_mask.sum().item()
-            else:
-                # If there are no samples for this class, set the metrics to -1
-                precision_per_class[class_idx] = -1
-                recall_per_class[class_idx] = -1
-                f1_per_class[class_idx] = -1
-                accuracy_per_class[class_idx] = -1
-                loss_per_class[class_idx] = -1
-                loss_per_class_std[class_idx] = -1
-                class_counts[class_idx] = 0
+        #         # Update class counts and metrics
+        #         precision_per_class[class_idx] = precision
+        #         recall_per_class[class_idx] = recall
+        #         f1_per_class[class_idx] = f1
+        #         accuracy_per_class[class_idx] = accuracy
+        #         loss_per_class[class_idx] = class_loss
+        #         loss_per_class_std[class_idx] = class_loss_std
+        #         class_counts[class_idx] = class_mask.sum().item()
+        #     else:
+        #         # If there are no samples for this class, set the metrics to -1
+        #         precision_per_class[class_idx] = -1
+        #         recall_per_class[class_idx] = -1
+        #         f1_per_class[class_idx] = -1
+        #         accuracy_per_class[class_idx] = -1
+        #         loss_per_class[class_idx] = -1
+        #         loss_per_class_std[class_idx] = -1
+        #         class_counts[class_idx] = 0
         
         # Px per label        
         if cfg.selected_descriptors == "Px_label_long":
@@ -425,75 +425,75 @@ class ModelEvaluator:
             latent_mean_by_label = list(np.array(latent_mean_by_label).flatten())
             latent_std_by_label = list(np.array(latent_std_by_label).flatten())
             
-        elif cfg.selected_descriptors == "Px_label_short":
-            labels = y_true_all.cpu().numpy()
-            latent_mean_by_label = []
-            latent_std_by_label = []
-            for label in range(cfg.n_classes):
-                # Find indices of samples corresponding to the current label
-                indices = np.where(labels == label)[0]
-                # Extract the latent vectors for these samples
-                latent_subset = latent_save[indices]
-                if latent_subset.shape[0] > 1:
-                    latent_subset = latent_subset.mean(axis=1)
-                    # Mean and std on first dimension
-                    latent_mean_by_label.append(np.mean(latent_subset, axis=0))
-                    latent_std_by_label.append(np.std(latent_subset, axis=0))
-                else:
-                    latent_mean_by_label.append(-1)
-                    latent_std_by_label.append(-1)
+        # elif cfg.selected_descriptors == "Px_label_short":
+        #     labels = y_true_all.cpu().numpy()
+        #     latent_mean_by_label = []
+        #     latent_std_by_label = []
+        #     for label in range(cfg.n_classes):
+        #         # Find indices of samples corresponding to the current label
+        #         indices = np.where(labels == label)[0]
+        #         # Extract the latent vectors for these samples
+        #         latent_subset = latent_save[indices]
+        #         if latent_subset.shape[0] > 1:
+        #             latent_subset = latent_subset.mean(axis=1)
+        #             # Mean and std on first dimension
+        #             latent_mean_by_label.append(np.mean(latent_subset, axis=0))
+        #             latent_std_by_label.append(np.std(latent_subset, axis=0))
+        #         else:
+        #             latent_mean_by_label.append(-1)
+        #             latent_std_by_label.append(-1)
             
-            # concatenate latent_mean_by_label and latent_std_by_label
-            latent_mean_by_label = np.array(latent_mean_by_label).tolist()
-            latent_std_by_label = np.array(latent_std_by_label).tolist()
+        #     # concatenate latent_mean_by_label and latent_std_by_label
+        #     latent_mean_by_label = np.array(latent_mean_by_label).tolist()
+        #     latent_std_by_label = np.array(latent_std_by_label).tolist()
             
-        else:
-            latent_mean_by_label = []
-            latent_std_by_label = []
+        # else:
+        #     latent_mean_by_label = []
+        #     latent_std_by_label = []
 
                 
-        # Weighted loss / metric
-        if cfg.weighted_metric_descriptors: # TODO: Not conviced about this, we are flattening a lot of information
-            # Weight the loss / metric by the number of samples in each class
-            loss_per_class = [loss_per_class[i] / class_counts[i] if class_counts[i] > 0 else loss_per_class[i] \
-                                for i in range(num_classes)]
-            accuracy_per_class = [accuracy_per_class[i] / class_counts[i] if class_counts[i] > 0 else accuracy_per_class[i] \
-                                for i in range(num_classes)]            
+        # # Weighted loss / metric
+        # if cfg.weighted_metric_descriptors: # TODO: Not conviced about this, we are flattening a lot of information
+        #     # Weight the loss / metric by the number of samples in each class
+        #     loss_per_class = [loss_per_class[i] / class_counts[i] if class_counts[i] > 0 else loss_per_class[i] \
+        #                         for i in range(num_classes)]
+        #     accuracy_per_class = [accuracy_per_class[i] / class_counts[i] if class_counts[i] > 0 else accuracy_per_class[i] \
+        #                         for i in range(num_classes)]            
             
 
         # differential privacy on the descriptors
         if cfg.differential_privacy_descriptors:
             # Add differential privacy to the descriptors
             # print(f"Client {client_id} - before {loss_per_class}")
-            loss_per_class = add_dp_noise(loss_per_class, cfg.epsilon, sensitivity)
+            # loss_per_class = add_dp_noise(loss_per_class, cfg.epsilon, sensitivity)
             # print(f"Client {client_id} - after {loss_per_class}")
-            loss_per_class_std = add_dp_noise(loss_per_class_std, cfg.epsilon, sensitivity)
+            # loss_per_class_std = add_dp_noise(loss_per_class_std, cfg.epsilon, sensitivity)
             latent_mean = add_dp_noise(latent_mean, cfg.epsilon, sensitivity)
             latent_std = add_dp_noise(latent_std, cfg.epsilon, sensitivity)
-            latent_mean_cond = add_dp_noise(latent_mean_cond, cfg.epsilon, sensitivity)
-            latent_std_cond = add_dp_noise(latent_std_cond, cfg.epsilon, sensitivity)
+            # latent_mean_cond = add_dp_noise(latent_mean_cond, cfg.epsilon, sensitivity)
+            # latent_std_cond = add_dp_noise(latent_std_cond, cfg.epsilon, sensitivity)
             latent_mean_by_label = add_dp_noise(latent_mean_by_label, cfg.epsilon, sensitivity)
             latent_std_by_label = add_dp_noise(latent_std_by_label, cfg.epsilon, sensitivity)
             
             
         res = {
             "num_examples_val": len(self.test_loader.dataset),
-            "loss_val": float(loss_trad),
-            "accuracy": float(accuracy_trad),
-            "precision_pc": json.dumps(precision_per_class), # use json.dumps to serialize the list - read with json.loads
-            "recall_pc": json.dumps(recall_per_class),
-            "f1_pc": json.dumps(f1_per_class),
-            "accuracy_pc": json.dumps(accuracy_per_class),
-            "loss_pc_mean": json.dumps(loss_per_class),
-            "loss_pc_std": json.dumps(loss_per_class_std),
-            "latent_space_mean": json.dumps(latent_mean),
-            "latent_space_std": json.dumps(latent_std),
-            "latent_space_cond_mean": json.dumps(latent_mean_cond),
-            "latent_space_cond_std": json.dumps(latent_std_cond),
-            "latent_space_mean_by_label": json.dumps(latent_mean_by_label),
-            "latent_space_std_by_label": json.dumps(latent_std_by_label),
-            "max_latent_space": float(new_max_latent_space),
-            "class_counts": json.dumps(class_counts),
+            # "loss_val": float(loss_trad),
+            # "accuracy": float(accuracy_trad),
+            # "precision_pc": json.dumps(precision_per_class), # use json.dumps to serialize the list - read with json.loads
+            # "recall_pc": json.dumps(recall_per_class),
+            # "f1_pc": json.dumps(f1_per_class),
+            # "accuracy_pc": json.dumps(accuracy_per_class),
+            # "loss_pc_mean": json.dumps(loss_per_class),
+            # "loss_pc_std": json.dumps(loss_per_class_std),
+            "latent_space_mean": json.dumps(latent_mean),   # to keep
+            "latent_space_std": json.dumps(latent_std),    # to keep
+            # "latent_space_cond_mean": json.dumps(latent_mean_cond),
+            # "latent_space_cond_std": json.dumps(latent_std_cond),
+            "latent_space_mean_by_label": json.dumps(latent_mean_by_label),     # to keep
+            "latent_space_std_by_label": json.dumps(latent_std_by_label),       # to keep
+            # "max_latent_space": float(new_max_latent_space),
+            # "class_counts": json.dumps(class_counts),
             "cid": int(client_id)
         }
 
@@ -518,18 +518,18 @@ class ModelEvaluator:
         num_classes = model.num_classes
 
         # Initialize storage for metrics
-        f1_per_class = [0] * num_classes
-        accuracy_per_class = [0] * num_classes
+        # f1_per_class = [0] * num_classes
+        # accuracy_per_class = [0] * num_classes
         loss_per_class = [0] * num_classes
         loss_per_class_std = [0] * num_classes
-        class_counts = [0] * num_classes
+        # class_counts = [0] * num_classes
 
         y_true_all = []
         y_pred_all = []
         loss_all = []
         latent_all = []
         latent_mean = []
-        latent_cond = []
+        # latent_cond = []
         loss_trad = 0
         total_samples = 0
 
@@ -541,13 +541,13 @@ class ModelEvaluator:
                 # model output
                 output, latent_space = model(data, latent=True)
 
-                # latent space condition
-                if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
-                    latent_space_cond = torch.zeros_like(latent_space)
-                    for i in range(len(target)):
-                        # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
-                        latent_space_cond[i] = latent_space[i] + latent_space[i] * cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)  
-                    latent_cond.extend(latent_space_cond.cpu().numpy())
+                # # latent space condition
+                # if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
+                #     latent_space_cond = torch.zeros_like(latent_space)
+                #     for i in range(len(target)):
+                #         # latent_space[i] = latent_space[i] * torch.ones_like(latent_space[i])*target[i]
+                #         latent_space_cond[i] = latent_space[i] + latent_space[i] * cfg.pos_multiplier*torch.sin(torch.ones_like(latent_space[i])*target[i]/(10000**(torch.arange(len(latent_space[i]), device=self.device)/len(latent_space[i])))).to(self.device)  
+                #     latent_cond.extend(latent_space_cond.cpu().numpy())
                     
                 latent_all.extend(latent_space.cpu().numpy())
                     
@@ -591,50 +591,50 @@ class ModelEvaluator:
             pca.fit(random_points)
             # transform latent_all
             latent_all = pca.transform(latent_all)
-        # Mean and std on first dimension
+        # # Mean and std on first dimension
         latent_mean = list(np.mean(latent_all, axis=0))
         latent_std = list(np.std(latent_all, axis=0))
         
-        if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
-            latent_cond = np.array(latent_cond)
-            # transform latent_all
-            with threadpool_limits(limits=1): # faster on linux
-                latent_cond = pca.transform(latent_cond)
-            # Mean and std on first dimension
-            latent_mean_cond = list(np.mean(latent_cond, axis=0))
-            latent_std_cond = list(np.std(latent_cond, axis=0))
+        # if cfg.selected_descriptors == "Px_cond" or cfg.selected_descriptors == "Pxy_cond":
+        #     latent_cond = np.array(latent_cond)
+        #     # transform latent_all
+        #     with threadpool_limits(limits=1): # faster on linux
+        #         latent_cond = pca.transform(latent_cond)
+        #     # Mean and std on first dimension
+        #     latent_mean_cond = list(np.mean(latent_cond, axis=0))
+        #     latent_std_cond = list(np.std(latent_cond, axis=0))
             
-        # Iterate through each class (for MNIST, classes are 0 to 9 by default)
-        for class_idx in range(num_classes):
-            # Get all predictions and ground truths for the current class
-            class_mask = (y_true_all == class_idx)  # Mask for this class
+        # # Iterate through each class (for MNIST, classes are 0 to 9 by default)
+        # for class_idx in range(num_classes):
+        #     # Get all predictions and ground truths for the current class
+        #     class_mask = (y_true_all == class_idx)  # Mask for this class
             
-            y_true_class = (y_true_all == class_idx).numpy().astype(int)  # Binary labels for the current class
-            y_pred_class = (y_pred_all == class_idx).numpy().astype(int)  # Binary predictions for the current class
+        #     y_true_class = (y_true_all == class_idx).numpy().astype(int)  # Binary labels for the current class
+        #     y_pred_class = (y_pred_all == class_idx).numpy().astype(int)  # Binary predictions for the current class
             
-            # Only calculate if there are samples for this class
-            if class_mask.sum() > 0:
-                # Compute precision, recall, and F1-score for this class
-                f1 = f1_score(y_true_class, y_pred_class, zero_division=0)
-                accuracy = accuracy_score(y_true_class, y_pred_class)
+        #     # Only calculate if there are samples for this class
+        #     if class_mask.sum() > 0:
+        #         # Compute precision, recall, and F1-score for this class
+        #         f1 = f1_score(y_true_class, y_pred_class, zero_division=0)
+        #         accuracy = accuracy_score(y_true_class, y_pred_class)
 
-                # Compute the loss for this class (average the loss of samples in this class)
-                class_loss = loss_all[class_mask].mean().item()
-                class_loss_std = loss_all[class_mask].std().item()
+        #         # Compute the loss for this class (average the loss of samples in this class)
+        #         class_loss = loss_all[class_mask].mean().item()
+        #         class_loss_std = loss_all[class_mask].std().item()
 
-                # Update class counts and metrics
-                f1_per_class[class_idx] = f1
-                accuracy_per_class[class_idx] = accuracy
-                loss_per_class[class_idx] = class_loss
-                loss_per_class_std[class_idx] = class_loss_std
-                class_counts[class_idx] = class_mask.sum().item()
-            else:
-                # If there are no samples for this class, set the metrics to -1
-                f1_per_class[class_idx] = -1
-                accuracy_per_class[class_idx] = -1
-                loss_per_class[class_idx] = -1
-                loss_per_class_std[class_idx] = -1
-                class_counts[class_idx] = 0
+        #         # Update class counts and metrics
+        #         f1_per_class[class_idx] = f1
+        #         accuracy_per_class[class_idx] = accuracy
+        #         loss_per_class[class_idx] = class_loss
+        #         loss_per_class_std[class_idx] = class_loss_std
+        #         class_counts[class_idx] = class_mask.sum().item()
+        #     else:
+        #         # If there are no samples for this class, set the metrics to -1
+        #         f1_per_class[class_idx] = -1
+        #         accuracy_per_class[class_idx] = -1
+        #         loss_per_class[class_idx] = -1
+        #         loss_per_class_std[class_idx] = -1
+        #         class_counts[class_idx] = 0
 
         # Px per label        
         if cfg.selected_descriptors == "Px_label_long":
