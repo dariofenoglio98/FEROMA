@@ -9,6 +9,10 @@ ANDA/
 anda_plot/
 __pycache__/
 .DS_Store
+
+ANDA.zip
+ANDA/
+ANDA_new/
  
 # Byte-compiled / optimized / DLL files
 ***/__pycache__/
