@@ -6,6 +6,8 @@ data/MNIST/
 **/results/
 **/histories/
 ANDA/
+ANDA_new/
+ANDA.zip
 anda_plot/
 __pycache__/
 .DS_Store
@@ -17,6 +19,15 @@ __pycache__/
  
 # C extensions
 *.so
+
+# zip
+*.zip
+*.tar
+*.tar.gz
+*.tar.bz2
+*.tar.xz
+*.tar.lzma
+*.tar.lz
  
 # Torch model files or datasets
 *.pt
