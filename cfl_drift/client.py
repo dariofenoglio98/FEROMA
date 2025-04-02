@@ -70,7 +70,8 @@ class FlowerClient(fl.client.NumPyClient):
         cur_labels = torch.tensor(cur_data['train_labels'], dtype=torch.int64) if not cfg.training_drifting else torch.tensor(cur_data['labels'], dtype=torch.int64)
 
         # cur_features = cur_data['train_features'] if not cfg.training_drifting else cur_data['features']
-        cur_features = cur_features.unsqueeze(1) if utils.get_in_channels() == 1 else cur_features
+        if not cfg.dataset_name == "CheXpert":
+            cur_features = cur_features.unsqueeze(1) if utils.get_in_channels() == 1 else cur_features
 
         # cur_labels = cur_data['train_labels'] if not cfg.training_drifting else cur_data['labels']
 

@@ -138,13 +138,16 @@ def plot_elbow_and_silhouette(range_n_clusters, inertia, silhouette_scores, serv
 
 # Get cur dataset in_channels
 def get_in_channels():
-    for file_name in ['../data/cur_datasets/client_1.npy', '../data/cur_datasets/client_1_round_-1.npy']:
-        if os.path.exists(file_name):
-            cur_data = np.load(file_name, allow_pickle=True).item()
-            break
-    cur_features = cur_data['train_features'] if not cfg.training_drifting else cur_data['features']
+    if cfg.dataset_name == "CheXpert":
+        return 1
+    else:
+        for file_name in ['../data/cur_datasets/client_1.npy', '../data/cur_datasets/client_1_round_-1.npy']:
+            if os.path.exists(file_name):
+                cur_data = np.load(file_name, allow_pickle=True).item()
+                break
+        cur_features = cur_data['train_features'] if not cfg.training_drifting else cur_data['features']
 
-    return 3 if len(cur_features.shape) == 4 else 1
+        return 3 if len(cur_features.shape) == 4 else 1
 
 def set_seed(seed):
     # Set seed for torch

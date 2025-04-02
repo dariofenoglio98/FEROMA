@@ -47,9 +47,9 @@ for epoch_num in 10; do
         for fold in $(seq 0 $(($k_folds - 1))); do        
             echo -e "\n\033[1;36mStarting fold $((fold + 1)) - (scaling $s and epoch_num $epoch_num)\033[0m\n"
 
-            # Clean and create datasets
-            rm -rf data/cur_datasets/* 
-            python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
+            # # Clean and create datasets
+            # rm -rf data/cur_datasets/* 
+            # python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
 
             # exit
 

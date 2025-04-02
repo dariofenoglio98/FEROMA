@@ -22,8 +22,8 @@ mp.set_start_method("fork", force=True)  # Avoids issues on macOS
 # path = kagglehub.dataset_download("ashery/chexpert")
 # print("Path to dataset files:", path)
 
-os.makedirs('./data/cur_datasets', exist_ok=True)
-path = '/Users/mohanli/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
+# os.makedirs('./data/cur_datasets', exist_ok=True)
+path = '/Users/dariofenoglio/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
 
 def generate_DA_dist(
     dist_bank: list,

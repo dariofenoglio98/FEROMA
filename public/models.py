@@ -19,7 +19,7 @@ import torch.nn.functional as F
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 from sklearn.decomposition import PCA
-from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score
+from sklearn.metrics import precision_score, recall_score, f1_score, accuracy_score, roc_auc_score
 from threadpoolctl import threadpool_limits
 
 import public.config as cfg
@@ -108,6 +108,7 @@ class ResNet9(nn.Module):
             return x, x_l
         else:
             return x
+            
     
 models = {
     'LeNet5': LeNet5,
@@ -126,7 +127,12 @@ def simple_train(model, device, train_loader, optimizer, epoch, client_id=None):
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = F.cross_entropy(output, target)
+        if cfg.dataset_name == "CheXpert":
+            # For multi-label classification, ensure target is float
+            loss = F.binary_cross_entropy_with_logits(output, target.float())
+        else:
+            # For multi-class classification (single label per sample)
+            loss = F.cross_entropy(output, target)
         loss.backward()
         optimizer.step()
         # if batch_idx % 10 == 0:
@@ -163,20 +169,47 @@ def fedprox_train(model, device, train_loader, optimizer, proximal_mu, epoch, cl
 def simple_test(model, device, test_loader):
     model.eval()
     test_loss = 0.0
-    correct = 0.0
-    with torch.no_grad():
-        for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
-            output = model(data)
-            test_loss += F.cross_entropy(output, target, reduction='sum').item()  # sum up batch loss
-            pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
-            correct += pred.eq(target.view_as(pred)).sum().item()
 
-    test_loss /= len(test_loader.dataset)
-    accuracy = correct / len(test_loader.dataset)
-    # print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
-    #       f'({100. * correct / len(test_loader.dataset):.0f}%)\n')
-    return test_loss, accuracy
+    # For CheXpert (multi-label)
+    if cfg.dataset_name == "CheXpert":
+        all_targets = []
+        all_preds = []
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(device), target.to(device)
+                output = model(data)
+                # Use BCE with logits for multi-label loss
+                loss = F.binary_cross_entropy_with_logits(output, target.float(), reduction='sum')
+                test_loss += loss.item()
+                # Collect predictions and targets
+                all_targets.append(target.cpu().numpy())
+                all_preds.append(torch.sigmoid(output).cpu().numpy())
+        # Concatenate results over batches
+        all_targets = np.concatenate(all_targets, axis=0)
+        all_preds = np.concatenate(all_preds, axis=0)
+        
+        # Compute macro-average AUROC over labels
+        auc = roc_auc_score(all_targets, all_preds, average='macro')
+
+        test_loss /= len(test_loader.dataset)
+        return test_loss, auc
+
+    # For multi-class datasets
+    else:
+        correct = 0.0
+        with torch.no_grad():
+            for data, target in test_loader:
+                data, target = data.to(device), target.to(device)
+                output = model(data)
+                test_loss += F.cross_entropy(output, target, reduction='sum').item()  # sum up batch loss
+                pred = output.argmax(dim=1, keepdim=True)  # get the index of the max log-probability
+                correct += pred.eq(target.view_as(pred)).sum().item()
+
+        test_loss /= len(test_loader.dataset)
+        accuracy = correct / len(test_loader.dataset)
+        # print(f'\nTest set: Average loss: {test_loss:.4f}, Accuracy: {correct}/{len(test_loader.dataset)} '
+        #       f'({100. * correct / len(test_loader.dataset):.0f}%)\n')
+        return test_loss, accuracy
 
 
 def add_dp_noise(data, epsilon, sensitivity=1.0):

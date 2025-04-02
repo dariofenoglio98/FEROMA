@@ -33,14 +33,14 @@ distance_visualization = True
 
 # Dynamic dataset
 drifting_type = 'trDR_teND'
-dataset_name = "MNIST"
+dataset_name = "CheXpert" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "CheXpert"]
 verbose = True
 count_labels = True
 plot_clients = False
 non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
 
 # Training model settings
-model_name = "LeNet5"   # ["LeNet5", "ResNet9"]
+model_name = "ResNet9"   # ["LeNet5", "ResNet9"]
 batch_size = 64
 test_batch_size = 64
 client_eval_ratio = 0.2
@@ -54,7 +54,8 @@ n_classes_dict = {
     "CIFAR10": 10,
     "CIFAR100": 100,
     "MNIST": 10,
-    "FMNIST": 10
+    "FMNIST": 10,
+    "CheXpert": 14,
 }
 n_classes = n_classes_dict[dataset_name]
 
@@ -62,7 +63,8 @@ input_size_dict = {
     "CIFAR10": (32, 32),
     "CIFAR100": (32, 32),
     "MNIST": (28, 28),
-    "FMNIST": (28, 28)
+    "FMNIST": (28, 28),
+    "CheXpert": (224, 224),
 }
 input_size = input_size_dict[dataset_name]
 
@@ -70,7 +72,8 @@ acceptable_accuracy = {
     "CIFAR10": 0.5,
     "CIFAR100": 0.1,
     "MNIST": 0.8,
-    "FMNIST": 0.8
+    "FMNIST": 0.8,
+    "CheXpert": 0.7,
 }
 th_accuracy = acceptable_accuracy[dataset_name]
 training_drifting = False if drifting_type in ['static', 'trND_teDR'] else True # to be identified
