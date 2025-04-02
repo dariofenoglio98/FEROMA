@@ -22,6 +22,7 @@ import time
 import torch
 import argparse
 import pickle
+import math
 import numpy as np
 from functools import reduce
 from scipy.spatial.distance import euclidean, cosine
@@ -166,13 +167,27 @@ def fit_config(server_round: int):
 
 
 # Custom weighted average function
+# def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
+#     # Multiply accuracy of each client by number of examples used
+#     accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
+#     # validities = [num_examples * m["validity"] for num_examples, m in metrics]
+#     examples = [num_examples for num_examples, _ in metrics]
+#     # Aggregate and return custom metric (weighted average)
+#     return {"accuracy": sum(accuracies) / sum(examples)}
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
-    # Multiply accuracy of each client by number of examples used
-    accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
-    # validities = [num_examples * m["validity"] for num_examples, m in metrics]
-    examples = [num_examples for num_examples, _ in metrics]
-    # Aggregate and return custom metric (weighted average)
-    return {"accuracy": sum(accuracies) / sum(examples)}
+    # Filter out entries where the accuracy is NaN
+    valid_metrics = [(num_examples, m) for num_examples, m in metrics if not math.isnan(m["accuracy"])]
+    
+    # If no valid metrics remain, return NaN as the overall accuracy
+    if not valid_metrics:
+        return {"accuracy": float('nan')}
+    
+    # Compute the weighted sum of accuracies for valid metrics
+    weighted_sum = sum(num_examples * m["accuracy"] for num_examples, m in valid_metrics)
+    total_examples = sum(num_examples for num_examples, _ in valid_metrics)
+    
+    # Return the weighted average
+    return {"accuracy": weighted_sum / total_examples}
 
 
 def weighted_loss_avg(results: List[Tuple[int, float]]) -> float:
@@ -812,13 +827,19 @@ def main() -> None:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
             cur_data['test_features'] = torch.tensor(cur_data['test_features'], dtype=torch.float32)
             cur_data['test_labels'] = torch.tensor(cur_data['test_labels'], dtype=torch.int64)
-            test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            else:
+                test_x = cur_data['test_features']
             test_y = cur_data['test_labels']
         else:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
             cur_data['features'] = torch.tensor(cur_data['features'], dtype=torch.float32)
             cur_data['labels'] = torch.tensor(cur_data['labels'], dtype=torch.int64)
-            test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            else:
+                test_x = cur_data['features']
             test_y = cur_data['labels']
         
         # Create test dataset and loader
@@ -913,8 +934,8 @@ def main() -> None:
         losses.append(loss_test)
 
     # print average loss and accuracy
-    print(f"\n\033[93mAverage Loss: {np.mean(losses):.3f}, Average Accuracy: {np.mean(accuracies)*100:.2f}\033[0m")
-    print(f"\033[93mAverage Loss (known): {np.mean(losses_known):.3f}, Average Accuracy (known): {np.mean(accuracies_known)*100:.2f}\033[0m")
+    print(f"\n\033[93mAverage Loss: {np.nanmean(losses):.3f}, Average Accuracy: {np.nanmean(accuracies)*100:.2f}\033[0m")
+    print(f"\033[93mAverage Loss (known): {np.nanmean(losses_known):.3f}, Average Accuracy (known): {np.nanmean(accuracies_known)*100:.2f}\033[0m")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes \n\n\n\033[0m")
   
   
@@ -928,11 +949,17 @@ def main() -> None:
         test_x, test_y = [], []
         if not cfg.training_drifting:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
-            test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            else:
+                test_x = cur_data['test_features']
             test_y = cur_data['test_labels']
         else:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
-            test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            else:
+                test_x = cur_data['features']
             test_y = cur_data['labels']
         
         # Create test dataset and loader
@@ -1027,25 +1054,25 @@ def main() -> None:
         losses_cosine.append(loss_test)
 
     # print average loss and accuracy
-    print(f"\n\033[93mAverage Loss: {np.mean(losses_cosine):.3f}, Average Accuracy: {np.mean(accuracies_cosine)*100:.2f}\033[0m")
-    print(f"\033[93mAverage Loss (known): {np.mean(losses_known_cosine):.3f}, Average Accuracy (known): {np.mean(accuracies_known_cosine)*100:.2f}\033[0m")
+    print(f"\n\033[93mAverage Loss: {np.nanmean(losses_cosine):.3f}, Average Accuracy: {np.nanmean(accuracies_cosine)*100:.2f}\033[0m")
+    print(f"\033[93mAverage Loss (known): {np.nanmean(losses_known_cosine):.3f}, Average Accuracy (known): {np.nanmean(accuracies_known_cosine)*100:.2f}\033[0m")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")  
   
     # Save metrics as numpy array
     metrics = {
         "loss": losses,
         "accuracy": accuracies,
-        "average_loss": np.mean(losses),
-        "average_accuracy": np.mean(accuracies),
-        "average_loss_cosine": np.mean(losses_cosine),
-        "average_accuracy_cosine": np.mean(accuracies_cosine),
+        "average_loss": np.nanmean(losses),
+        "average_accuracy": np.nanmean(accuracies),
+        "average_loss_cosine": np.nanmean(losses_cosine),
+        "average_accuracy_cosine": np.nanmean(accuracies_cosine),
         "time": round((time.time() - start_time)/60, 2),
     }
     if cfg.non_iid_type == "Py_x":
-        metrics["average_loss_known"] = np.mean(losses_known)
-        metrics["average_accuracy_known"] = np.mean(accuracies_known)
-        metrics["average_loss_known_cosine"] = np.mean(losses_known_cosine)
-        metrics["average_accuracy_known_cosine"] = np.mean(accuracies_known_cosine)
+        metrics["average_loss_known"] = np.nanmean(losses_known)
+        metrics["average_accuracy_known"] = np.nanmean(accuracies_known)
+        metrics["average_loss_known_cosine"] = np.nanmean(losses_known_cosine)
+        metrics["average_accuracy_known_cosine"] = np.nanmean(accuracies_known_cosine)
     np.save(f'results/{exp_path}/test_metrics_fold_{args.fold}.npy', metrics)
     
     time.sleep(1)

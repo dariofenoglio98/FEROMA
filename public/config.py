@@ -1,6 +1,6 @@
 # Overall settings
-k_folds = 5 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'cfl_drift' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
+k_folds = 2 # number of folds for cross-validation, if 1, no cross-validation
+strategy = 'fedavg' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 20
@@ -24,7 +24,7 @@ th_round = 0.06 # derivative threshold on accuracy trend for starting clustering
 
 # DFUL settings
 distance_function = "euclidean" # ['cosine', 'euclidean']
-n_stochastic_sampling = 2 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
+n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
 weighted_metric_descriptors = False
 selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
@@ -64,7 +64,7 @@ input_size_dict = {
     "CIFAR100": (32, 32),
     "MNIST": (28, 28),
     "FMNIST": (28, 28),
-    "CheXpert": (224, 224),
+    "CheXpert": (64, 64),
 }
 input_size = input_size_dict[dataset_name]
 

@@ -24,7 +24,11 @@ def check_gpu(client_id:int = 0):
         if cfg.gpu == -2: # multiple gpu
             # assert client_id >=0, "client_id must be passed to select the respective GPU"
             n_total_gpus = torch.cuda.device_count()
-            device = 'cuda:' + str(int(client_id % n_total_gpus))
+            if client_id < 15:
+                device = "cuda:2"
+            else:
+                device = "cuda:1"
+            # device = 'cuda:' + str(int(client_id % n_total_gpus))
         else:
             device = 'cuda:' + str(cfg.gpu)
         torch.cuda.manual_seed_all(cfg.random_seed) 

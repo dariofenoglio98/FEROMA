@@ -23,7 +23,7 @@ mp.set_start_method("fork", force=True)  # Avoids issues on macOS
 # print("Path to dataset files:", path)
 
 # os.makedirs('./data/cur_datasets', exist_ok=True)
-path = '/Users/dariofenoglio/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
+path = '/home/dario/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
 
 def generate_DA_dist(
     dist_bank: list,
@@ -201,8 +201,8 @@ def split_to_K_dist(
 
 
 
-train_data_list = split_to_K_dist(start_sample=0,n_sample=TRAIN_SIZE, image_dim=224, dist_num=DIST_NUM, data_path=path)
-test_data_list = split_to_K_dist(start_sample=TRAIN_SIZE,n_sample=TRAIN_SIZE+TEST_SIZE, image_dim=224, dist_num=DIST_NUM, data_path=path)
+train_data_list = split_to_K_dist(start_sample=0,n_sample=TRAIN_SIZE, image_dim=64, dist_num=DIST_NUM, data_path=path)
+test_data_list = split_to_K_dist(start_sample=TRAIN_SIZE,n_sample=TRAIN_SIZE+TEST_SIZE, image_dim=64, dist_num=DIST_NUM, data_path=path)
 
 
 train_dist_list = []

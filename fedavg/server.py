@@ -16,6 +16,7 @@ from collections import OrderedDict
 import json
 import time
 from functools import reduce
+import math
 
 import sys
 import os
@@ -55,13 +56,28 @@ def fit_config(
     return config
 
 # Custom weighted average function
+# def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
+#     # Multiply accuracy of each client by number of examples used
+#     accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
+#     # validities = [num_examples * m["validity"] for num_examples, m in metrics]
+#     examples = [num_examples for num_examples, _ in metrics]
+#     # Aggregate and return custom metric (weighted average)
+#     return {"accuracy": sum(accuracies) / sum(examples)}
 def weighted_average(metrics: List[Tuple[int, Metrics]]) -> Metrics:
-    # Multiply accuracy of each client by number of examples used
-    accuracies = [num_examples * m["accuracy"] for num_examples, m in metrics]
-    # validities = [num_examples * m["validity"] for num_examples, m in metrics]
-    examples = [num_examples for num_examples, _ in metrics]
-    # Aggregate and return custom metric (weighted average)
-    return {"accuracy": sum(accuracies) / sum(examples)}
+    # Filter out entries where the accuracy is NaN
+    valid_metrics = [(num_examples, m) for num_examples, m in metrics if not math.isnan(m["accuracy"])]
+    
+    # If no valid metrics remain, return NaN as the overall accuracy
+    if not valid_metrics:
+        return {"accuracy": float('nan')}
+    
+    # Compute the weighted sum of accuracies for valid metrics
+    weighted_sum = sum(num_examples * m["accuracy"] for num_examples, m in valid_metrics)
+    total_examples = sum(num_examples for num_examples, _ in valid_metrics)
+    
+    # Return the weighted average
+    return {"accuracy": weighted_sum / total_examples}
+
 
 def aggregate(results: List[Tuple[NDArrays, int]]) -> NDArrays:
     """Compute weighted average."""
@@ -196,13 +212,19 @@ def main() -> None:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}.npy', allow_pickle=True).item()
             cur_data['test_features'] = torch.tensor(cur_data['test_features'], dtype=torch.float32)
             cur_data['test_labels'] = torch.tensor(cur_data['test_labels'], dtype=torch.int64)
-            test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['test_features'] if in_channels == 3 else cur_data['test_features'].unsqueeze(1)
+            else:
+                test_x = cur_data['test_features']
             test_y = cur_data['test_labels']
         else:
             cur_data = np.load(f'../data/cur_datasets/client_{client_id}_round_-1.npy', allow_pickle=True).item()
             cur_data['features'] = torch.tensor(cur_data['features'], dtype=torch.float32)
             cur_data['labels'] = torch.tensor(cur_data['labels'], dtype=torch.int64)
-            test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            if not cfg.dataset_name == "CheXpert":
+                test_x = cur_data['features'] if in_channels == 3 else cur_data['features'].unsqueeze(1)
+            else:
+                test_x = cur_data['features']
             test_y = cur_data['labels']
         
         # Create test dataset and loader
@@ -216,15 +238,15 @@ def main() -> None:
         losses.append(loss_test)
     
     # Averaged accuracy across clients   
-    print(f"\n\033[93mAverage Test Loss: {np.mean(losses):.3f}, Average Test Accuracy: {np.mean(accuracies)*100:.2f}\033[0m\n")
+    print(f"\n\033[93mAverage Test Loss: {np.nanmean(losses):.3f}, Average Test Accuracy: {np.nanmean(accuracies)*100:.2f}\033[0m\n")
     print(f"\033[90mTraining time: {round((time.time() - start_time)/60, 2)} minutes\033[0m")
     
     # Save metrics as numpy array
     metrics = {
         "loss": losses,
         "accuracy": accuracies,
-        "average_loss": np.mean(losses),
-        "average_accuracy": np.mean(accuracies),
+        "average_loss": np.nanmean(losses),
+        "average_accuracy": np.nanmean(accuracies),
         "time": round((time.time() - start_time)/60, 2)
     }
     np.save(f'results/{exp_path}/test_metrics_fold_{args.fold}.npy', metrics)

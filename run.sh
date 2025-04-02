@@ -32,7 +32,7 @@ echo -e "\n\033[1;36mExperiment settings:\033[0m\n\033[1;36m \
 #     echo -e "\n\033[1;31mError: non-IID type not recognized\033[0m\n"
 #     exit 1
 # fi
-tot_scaling=2
+tot_scaling=0
 
 
 # For loop across epoch_num [3, 5, 7, 10 20]
@@ -44,7 +44,7 @@ for epoch_num in 10; do
         echo -e "\n\033[1;36mStarting experiment with scaling: $s and epoch_num: $epoch_num\033[0m\n"
 
         # K-Fold evaluation, if k_folds > 1
-        for fold in $(seq 0 $(($k_folds - 1))); do        
+        for fold in $(seq 0 0); do # $(($k_folds - 1))); do        
             echo -e "\n\033[1;36mStarting fold $((fold + 1)) - (scaling $s and epoch_num $epoch_num)\033[0m\n"
 
             # # Clean and create datasets
@@ -73,15 +73,15 @@ for epoch_num in 10; do
             # Clean up
             echo "Fold completed correctly"
             trap - SIGTERM 
-            # pkill -u dario -f client.py
-            pkill -u dariofenoglio -f client.py
+            pkill -u dario -f client.py -9
+            # pkill -u dariofenoglio -f client.py
             # pkill -u mohan -f client.py
             # pkill -u mohanli -f client.py
-            # pkill -u dario -f server.py
-            pkill -u dariofenoglio -f server.py
+            pkill -u dario -f server.py -9
+            # pkill -u dariofenoglio -f server.py
             # pkill -u mohan -f server.py
             # pkill -u mohanli -f server.py
-            pkill -u dariofenoglio -f python -9
+            # pkill -u dariofenoglio -f python -9
 
             # Change back to the root directory
             cd ..

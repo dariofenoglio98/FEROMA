@@ -69,11 +69,8 @@ class FlowerClient(fl.client.NumPyClient):
         cur_features = torch.tensor(cur_data['train_features'], dtype=torch.float32) if not cfg.training_drifting else torch.tensor(cur_data['features'], dtype=torch.float32)
         cur_labels = torch.tensor(cur_data['train_labels'], dtype=torch.int64) if not cfg.training_drifting else torch.tensor(cur_data['labels'], dtype=torch.int64)
 
-        # cur_features = cur_data['train_features'] if not cfg.training_drifting else cur_data['features']
         if not cfg.dataset_name == "CheXpert":
             cur_features = cur_features.unsqueeze(1) if utils.get_in_channels() == 1 else cur_features
-
-        # cur_labels = cur_data['train_labels'] if not cfg.training_drifting else cur_data['labels']
 
         # Split the data into training and testing subsets
         train_features, val_features, train_labels, val_labels = train_test_split(
