@@ -468,7 +468,12 @@ class ModelEvaluator:
             latent_std_by_label = []
             for label in range(cfg.n_classes):
                 # Find indices of samples corresponding to the current label
-                indices = np.where(labels == label)[0]
+                if cfg.dataset_name == "CheXpert":
+                    # For multi-label classification, use the label as a mask
+                    indices = np.where(labels[:, label] == 1)[0]
+                else:
+                    # For single-label classification, use the label directly
+                    indices = np.where(labels == label)[0]
                 # Extract the latent vectors for these samples
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
@@ -492,7 +497,12 @@ class ModelEvaluator:
             latent_std_by_label = []
             for label in range(cfg.n_classes):
                 # Find indices of samples corresponding to the current label
-                indices = np.where(labels == label)[0]
+                if cfg.dataset_name == "CheXpert":
+                    # For multi-label classification, use the label as a mask
+                    indices = np.where(labels[:, label] == 1)[0]
+                else:
+                    # For single-label classification, use the label directly
+                    indices = np.where(labels == label)[0]
                 # Extract the latent vectors for these samples
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
@@ -715,7 +725,12 @@ class ModelEvaluator:
             latent_std_by_label = []
             for label in range(cfg.n_classes):
                 # Find indices of samples corresponding to the current label
-                indices = np.where(labels == label)[0]
+                if cfg.dataset_name == "CheXpert":
+                    # For multi-label classification, use the label as a mask
+                    indices = np.where(labels[:, label] == 1)[0]
+                else:
+                    # For single-label classification, use the label directly
+                    indices = np.where(labels == label)[0]
                 # Extract the latent vectors for these samples
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
@@ -740,7 +755,12 @@ class ModelEvaluator:
             latent_std_by_label = []
             for label in range(cfg.n_classes):
                 # Find indices of samples corresponding to the current label
-                indices = np.where(labels == label)[0]
+                if cfg.dataset_name == "CheXpert":
+                    # For multi-label classification, use the label as a mask
+                    indices = np.where(labels[:, label] == 1)[0]
+                else:
+                    # For single-label classification, use the label directly
+                    indices = np.where(labels == label)[0]
                 # Extract the latent vectors for these samples
                 latent_subset = latent_save[indices]
                 if latent_subset.shape[0] > 1:
