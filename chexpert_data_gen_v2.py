@@ -3,7 +3,6 @@ TEST_SIZE = 20000
 PER_ROUND_TRAIN_SIZE = 500
 PER_ROUND_TEST_SIZE = 280
 IMAGE_DIM = 64
-CLIENT_NUM = 20
 
 
 # DIST_NUM = 2
@@ -25,6 +24,7 @@ parser = argparse.ArgumentParser(description='Generate datasets for ANDA')
 parser.add_argument('--fold', type=int, default=0, help='Fold number of the cross-validation')
 parser.add_argument('--scaling', type=int, default=0, help='Data scaler')
 parser.add_argument('--epoch_num', type=int, default=5, help='Number of data changes during the training')
+parser.add_argument('--n_clients', type=int, default=3, help='Number of clients')
 args = parser.parse_args()
 cur_seed = 42 + args.fold
 np.random.seed(cur_seed)
@@ -245,7 +245,7 @@ last_dist_list = []
 test_dist_list = []
 dist_bank = list(range(1, DIST_NUM + 1))
 
-for i in range(CLIENT_NUM):
+for i in range(args.n_clients):
     cur_DA_dist = generate_DA_dist(dist_bank, DA_epoch_locker_num = EPOCH_NUM, DA_max_dist = 100, DA_continual_divergence = False)
     train_dist_list.append(cur_DA_dist)
     last_dist_set.add(cur_DA_dist[-1]) 
@@ -254,12 +254,12 @@ for i in range(CLIENT_NUM):
 print("Last dist set: ", last_dist_set)
 print("Last dist list: ", last_dist_list)
 
-for i in range(CLIENT_NUM):
+for i in range(args.n_clients):
     test_dist_list.append(np.random.choice(last_dist_list))
 
 anda_dataset = []
 
-for client_Count in range(CLIENT_NUM):
+for client_Count in range(args.n_clients):
     print(f"Client: {client_Count}")
 
     # generate drifting

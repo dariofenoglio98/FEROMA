@@ -50,7 +50,7 @@ for epoch_num in 10; do
             # # Clean and create datasets
             # rm -rf data/cur_datasets/* 
             # python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
-            python chexpert_data_gen_v2.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
+            python chexpert_data_gen_v2.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num" --n_clients "$n_clients" 
  
             # exit
 
