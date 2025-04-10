@@ -3,12 +3,11 @@ TEST_SIZE = 20000
 PER_ROUND_TRAIN_SIZE = 500
 PER_ROUND_TEST_SIZE = 280
 IMAGE_DIM = 64
-
-
-DIST_NUM = 2
 CLIENT_NUM = 20
-EPOCH_NUM = 10
 
+
+# DIST_NUM = 2
+# EPOCH_NUM = 10
 
 import kagglehub
 import os
@@ -21,12 +20,34 @@ from tqdm import tqdm
 import multiprocessing as mp
 mp.set_start_method("fork", force=True)  # Avoids issues on macOS
 
+import argparse
+parser = argparse.ArgumentParser(description='Generate datasets for ANDA')
+parser.add_argument('--fold', type=int, default=0, help='Fold number of the cross-validation')
+parser.add_argument('--scaling', type=int, default=0, help='Data scaler')
+parser.add_argument('--epoch_num', type=int, default=5, help='Number of data changes during the training')
+args = parser.parse_args()
+cur_seed = 42 + args.fold
+np.random.seed(cur_seed)
+torch.manual_seed(cur_seed)
+
+if args.scaling == 0:
+    DIST_NUM = 2
+elif args.scaling == 1:
+    DIST_NUM = 4
+elif args.scaling == 2:
+    DIST_NUM = 8
+else:
+    raise ValueError("Invalid scaling value. Must be 0, 1, or 2.")
+
+EPOCH_NUM = args.epoch_num
+
+
 # Download latest version
 # path = kagglehub.dataset_download("ashery/chexpert")
 # print("Path to dataset files:", path)
 
 # kaggle saved
-path = '/Users/mohanli/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
+path = '/home/mohan/.cache/kagglehub/datasets/ashery/chexpert/versions/1'
 
 # sampled saved
 path_sampled = './data/saved_chex'
@@ -59,7 +80,7 @@ def split_to_K_dist(
     n_sample: int = 1000,
     image_dim: int = 64,
     dist_num: int = 8, #[2,4,8]
-    data_path: str = '/Users/mohanli/.cache/kagglehub/datasets/ashery/chexpert/versions/1',
+    data_path: str = '/home/mohan/.cache/kagglehub/datasets/ashery/chexpert/versions/1',
     save_dir: str = './data/saved_chex'
 ) -> list:
     '''
