@@ -14,6 +14,7 @@ import argparse
 import numpy as np
 import copy
 from collections import OrderedDict
+import json
 
 import torch
 from torch.utils.data import DataLoader
@@ -125,18 +126,17 @@ class FlowerClient(fl.client.NumPyClient):
                                                             client_id=self.client_id, max_latent_space=config["max_latent_space"]) 
 
             # # save client descriptors and samples_val_loader
-            # import json
             # d = json.loads(descriptors["latent_space_mean"]) + json.loads(descriptors["latent_space_std"]) + json.loads(descriptors["latent_space_mean_by_label"]) + json.loads(descriptors["latent_space_std_by_label"])
             # # convert to numpy
             # d = np.array(d)
-            # # if not os.path.exists(f"temp/"):
-            # #     os.makedirs(f"temp/")
-            # np.save(f"temp/descriptor_client_{self.client_id}_round_{cur_round}.npy", d)
+            # foldd = "mnist_epsilon_umap/temp_Py_scaling1_ep5/"
+            # os.makedirs(foldd, exist_ok=True)
+            # np.save(foldd + f"descriptor_client_{self.client_id}_round_{cur_round}.npy", d)
             # # np.save(f"temp/data_client_{self.client_id}_round_{cur_round}.npy", samples_val_loader.dataset[:])
             # features  = torch.stack([feat for feat, _ in samples_val_loader.dataset]).numpy()
             # labels    = torch.tensor([label for _, label in samples_val_loader.dataset]).numpy()
-            # np.save(f"temp/features_client_{self.client_id}_round_{cur_round}.npy", features)
-            # np.save(f"temp/labels_client_{self.client_id}_round_{cur_round}.npy", labels)
+            # np.save(foldd + f"features_client_{self.client_id}_round_{cur_round}.npy", features)
+            # np.save(foldd + f"labels_client_{self.client_id}_round_{cur_round}.npy", labels)
                     
             return self.last_trained_parameters, len(samples_val_loader.dataset), descriptors
 

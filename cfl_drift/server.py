@@ -1078,5 +1078,4 @@ def main() -> None:
     time.sleep(1)
     
 if __name__ == "__main__":
-    # os.makedirs("temp/", exist_ok=True)
     main()

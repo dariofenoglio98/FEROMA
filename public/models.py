@@ -9,6 +9,7 @@ Training functions to test the models
 
 VERBOSE = True
 
+# import umap
 import numpy as np  
 from math import prod
 import json
@@ -391,10 +392,11 @@ class ModelEvaluator:
         random_points = np.random.uniform(0, max_latent_space, size=(200, latent_all.shape[1]))
         with threadpool_limits(limits=1): # faster on linux
             pca = PCA(n_components=cfg.len_latent_space_descriptor)  
+            # pca = umap.UMAP(n_components=cfg.len_latent_space_descriptor, random_state=0)
             # fit PCA on random_points
             pca.fit(random_points)
             # transform latent_all
-            latent_all = pca.transform(latent_all)
+            latent_all = pca.transform(latent_all).tolist()
         
         if cfg.differential_privacy_descriptors:
             with threadpool_limits(limits=1): # faster on linux
@@ -561,8 +563,8 @@ class ModelEvaluator:
             "latent_space_std": json.dumps(latent_std),
             "latent_space_cond_mean": json.dumps(latent_mean_cond),
             "latent_space_cond_std": json.dumps(latent_std_cond),
-            "latent_space_mean_by_label": json.dumps(latent_mean_by_label),
-            "latent_space_std_by_label": json.dumps(latent_std_by_label),
+            "latent_space_mean_by_label": json.dumps(np.array(latent_mean_by_label).tolist()),
+            "latent_space_std_by_label": json.dumps(np.array(latent_std_by_label).tolist()),
             "max_latent_space": float(new_max_latent_space),
             # "class_counts": json.dumps(class_counts),
             "cid": int(client_id)
@@ -668,10 +670,11 @@ class ModelEvaluator:
         random_points = np.random.uniform(0, max_latent_space, size=(200, latent_all.shape[1]))
         with threadpool_limits(limits=1): # faster on linux
             pca = PCA(n_components=cfg.len_latent_space_descriptor)   
+            # pca = umap.UMAP(n_components=cfg.len_latent_space_descriptor, random_state=0)
             # fit PCA on random_points
             pca.fit(random_points)
             # transform latent_all
-            latent_all = pca.transform(latent_all)
+            latent_all = pca.transform(latent_all).tolist()
         # Mean and std on first dimension
         latent_mean = list(np.mean(latent_all, axis=0))
         latent_std = list(np.std(latent_all, axis=0))
