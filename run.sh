@@ -45,11 +45,11 @@ for epoch_num in 10; do
         echo -e "\n\033[1;36mStarting experiment with scaling: $s and epoch_num: $epoch_num\033[0m\n"
 
         # K-Fold evaluation, if k_folds > 1
-        for fold in $(seq 0 0); do # $(($k_folds - 1))); do        
+        for fold in $(seq 0 $(($k_folds - 1))); do
             echo -e "\n\033[1;36mStarting fold $((fold + 1)) - (scaling $s and epoch_num $epoch_num)\033[0m\n"
 
             # Clean and create datasets
-            # rm -rf data/cur_datasets/*
+            rm -rf data/cur_datasets/*
             if [ "$dataset_name" == "CheXpert" ]; then
                 python public/chexpert_data_gen.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num" --n_clients "$n_clients"
             else
@@ -61,7 +61,6 @@ for epoch_num in 10; do
             cd "$strategy"
 
             python server.py --fold "$fold" &
-            # python dynamic_cluster_global_server.py &
             sleep 2  # Sleep for 2s to give the server enough time to start
 
             for i in $(seq 0 $(($n_clients - 1))); do
