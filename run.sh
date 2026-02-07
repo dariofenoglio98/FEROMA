@@ -8,6 +8,7 @@ drifting_type=$(python -c "from public.config import drifting_type; print(drifti
 non_iid_type=$(python -c "from public.config import non_iid_type; print(non_iid_type)")
 n_clients=$(python -c "from public.config import n_clients; print(n_clients)")
 n_rounds=$(python -c "from public.config import n_rounds; print(n_rounds)")
+current_user=$(id -un)
 
 echo -e "\n\033[1;36mExperiment settings:\033[0m\n\033[1;36m \
     MODEL: $model_name\033[0m\n\033[1;36m \
@@ -47,10 +48,13 @@ for epoch_num in 10; do
         for fold in $(seq 0 0); do # $(($k_folds - 1))); do        
             echo -e "\n\033[1;36mStarting fold $((fold + 1)) - (scaling $s and epoch_num $epoch_num)\033[0m\n"
 
-            # # Clean and create datasets
-            # rm -rf data/cur_datasets/* 
-            # python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
-            python chexpert_data_gen_v2.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num" --n_clients "$n_clients" 
+            # Clean and create datasets
+            # rm -rf data/cur_datasets/*
+            if [ "$dataset_name" == "CheXpert" ]; then
+                python public/chexpert_data_gen.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num" --n_clients "$n_clients"
+            else
+                python public/generate_datasets.py --fold "$fold" --scaling "$s" --epoch_num "$epoch_num"
+            fi
  
             # exit
 
@@ -74,15 +78,8 @@ for epoch_num in 10; do
             # Clean up
             echo "Fold completed correctly"
             trap - SIGTERM 
-            pkill -u dario -f client.py -9
-            # pkill -u dariofenoglio -f client.py
-            # pkill -u mohan -f client.py
-            # pkill -u mohanli -f client.py
-            pkill -u dario -f server.py -9
-            # pkill -u dariofenoglio -f server.py
-            # pkill -u mohan -f server.py
-            # pkill -u mohanli -f server.py
-            # pkill -u dariofenoglio -f python -9
+            pkill -u "$current_user" -f client.py -9 >/dev/null 2>&1 || true
+            pkill -u "$current_user" -f server.py -9 >/dev/null 2>&1 || true
 
             # Change back to the root directory
             cd ..
@@ -94,10 +91,7 @@ for epoch_num in 10; do
         if [ "$k_folds" -gt 1 ]; then
 
             echo -e "\n\033[1;36mAveraging the results of all folds\033[0m\n"
-            # Averaging the results of all folds
             python public/average_results.py --epoch_num "$epoch_num" --scaling "$s"
-            # Plot confidence interval plots
-            # python public/plots_across_folds.py --dataset "$dataset_name"
         fi
 
     done

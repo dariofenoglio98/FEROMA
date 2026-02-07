@@ -3,12 +3,10 @@ TEST_SIZE = 20000
 PER_ROUND_TRAIN_SIZE = 500
 PER_ROUND_TEST_SIZE = 280
 IMAGE_DIM = 64
-
-
 # DIST_NUM = 2
 # EPOCH_NUM = 10
 
-import kagglehub
+
 import os
 import pandas as pd
 from PIL import Image

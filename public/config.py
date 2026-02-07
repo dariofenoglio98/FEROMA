@@ -1,6 +1,6 @@
 # Overall settings
 k_folds = 2 # number of folds for cross-validation, if 1, no cross-validation
-strategy = 'fedavg' # ['fedavg', 'cfl_drift', 'optimal_FL', 'cfl_oneshot']
+strategy = 'fedavg' # ['fedavg', 'feroma']
 random_seed = 42
 gpu = -2 # set the GPU to use, if -1 use CPU, -2 for multigpus
 n_clients = 20
@@ -11,18 +11,7 @@ differential_privacy_descriptors = False
 epsilon = 10.0
 # sensitivity = 1.0 # automatically calculated
 
-# Strategy cfl_oneshot
-cfl_oneshot_CLIENT_SCALING_METHOD = 1 # ['Ours', 'weighted', 'none']
-cfl_oneshot_CLIENT_CLUSTER_METHOD = 4 # ['Kmeans', 'DBSCAN', 'HDBSCAN', 'DBSCAN_no_outliers', 'Kmeans_with_prior']
-extended_descriptors = True #mean and std 
-weighted_metric_descriptors = False
-selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", "Pxy_cond", "Px_label_long", "Px_label_short" for training time
-# pos_multiplier = 6 # positional embedding multiplier 
-# check_cluster_at_inference = False ALWAYS BOTH  # True if you want to check the cluster at inference time (test-time inference for test drifting-find closest cluster to you), False otherwise (like baselines)
-eps_scaling = 1.0 # for clustering method 4
-th_round = 0.06 # derivative threshold on accuracy trend for starting clustering (good enough evaluation model)
-
-# DFUL settings
+# FEROMA settings
 distance_function = "euclidean" # ['cosine', 'euclidean']
 n_stochastic_sampling = 3 # number of times to sample the data for the stochastic sampling descriptor extraction; 0 for no sampling
 extended_descriptors = True #mean and std 
@@ -31,13 +20,13 @@ selected_descriptors = "Px_label_long" # Options: "Px", "Py", "Pxy", "Px_cond", 
 n_test_sample_per_class = 20
 distance_visualization = True
 
-# Dynamic dataset
+# Dynamic dataset (ANDA) settings
 drifting_type = 'trDR_teND'
-dataset_name = "CheXpert" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "CheXpert"]
+dataset_name = "MNIST" # ["CIFAR10", "CIFAR100", "MNIST", "FMNIST", "CheXpert"]
 verbose = True
 count_labels = True
 plot_clients = False
-non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] TODO
+non_iid_type = 'Px'         # ['Px','Py','Px_y','Py_x'] 
 
 # Training model settings
 model_name = "ResNet9"   # ["LeNet5", "ResNet9"]
